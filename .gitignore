@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+.idea
+.scrapy/
+Scrapy_zzuliacgn/customSettings.py
+Scrapy_zzuliacgn/settings.py
+Scrapy_zzuliacgn/tools/aixinxi_config.py
+log/
