@@ -71,8 +71,8 @@ DOWNLOADER_MIDDLEWARES = {
     # 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 750,
     # 'scrapy.downloadermiddlewares.stats.DownloaderStats': 850,
     # 'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware': 900,
-    'Scrapy_zzuliacgn.middlewares.RandomUserAgentMiddleware': 554,
-    'Scrapy_zzuliacgn.middlewares.ProxyMiddleware': 555,
+    'qidian.middlewares.RandomUserAgentMiddleware': 554,
+    # 'qidian.middlewares.ProxyMiddleware': 555,
 }
 
 # Enable or disable extensions
