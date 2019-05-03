@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import scrapy,re,chardet,random,datetime,os.path,json,difflib
+import scrapy,re,os.path,json,difflib,time
+# import chardet,random,datetime,
 
 class QidianSpider(scrapy.Spider):
     name = "qidian"
@@ -48,7 +49,7 @@ class QidianSpider(scrapy.Spider):
     def parse_novel_info(self, response):
         BI_resdict = {
             '书id':response.url[29:],
-            '书封面':'',
+            '书封面':self.imgToBase64(response.url[29:]),
             '书名':self.reglux(response.text, self.book_name_writer, False)[0][0],
             '总字数':0,
             '总点击数':'',
@@ -57,6 +58,7 @@ class QidianSpider(scrapy.Spider):
             '总推荐':'',
             '周推荐':'',
             '作者信息':{
+                '作者UUID':self.time_uuid(),
                 '姓名':self.reglux(response.text, self.book_name_writer, False)[0][1],
                 '作者简介':self.reglux(response.text, self.book_writer_intro, True)[0][1],
                 '作品总数':self.reglux(response.text, self.book_writer_works, True)[0],
@@ -246,6 +248,25 @@ class QidianSpider(scrapy.Spider):
 
 
     # 工具函数
+    def imgToBase64(self,imgId):
+        import requests, base64
+        myheader = {
+            'Origin': 'https://www.qvdv.com',
+            'Referer': 'https://www.qvdv.com/tools/qvdv-img2base64.html',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
+        }
+        req = requests.get(url="https://bookcover.yuewen.com/qdbimg/349573/%s/180"%imgId, headers=myheader)
+        base64_data = base64.b64encode(req.content)
+        return 'data:image/jpg;base64,/' + bytes.decode(base64_data)
+
+    def time_uuid(self):
+        '''
+        生成uuid1
+        :return: 基于MAC地址、当前时间戳、随机数生成。
+        '''
+        import uuid
+        return uuid.uuid1()
+
     def CtoE(self,tempStr):
         '''
         中文符号转英文符号
