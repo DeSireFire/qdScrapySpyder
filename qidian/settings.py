@@ -107,3 +107,11 @@ DOWNLOADER_MIDDLEWARES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+# 数据库信息
+# MYSQL
+MYSQL_HOST = '192.168.37.128' # 数据库地址
+MYSQL_DATABASE = 'test' # 数据库名
+MYSQL_USER = 'test'
+MYSQL_PASSWORD = 'test'
+MYSQL_PORT = 3306
