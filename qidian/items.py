@@ -24,12 +24,14 @@ class QidianItem(scrapy.Item):
     bURL = scrapy.Field()    # 书源URL
     bIndex = scrapy.Field()    # 小说目录
     bImgBase64 = scrapy.Field()    # 封面
+    isD = scrapy.Field()    # 是否属于删除状态
 
 class QidianChapterItem(scrapy.Item):
     cTitle = scrapy.Field()  # '所属卷名': temp['所属卷名'],
     cName = scrapy.Field()  # '章节名': temp['cN'],
     cUT = scrapy.Field()  # '更新时间': temp['uT'],
     cKeys = scrapy.Field()  # '字数': temp['cnt'],
+    isD = scrapy.Field()    # 是否属于删除状态
 
 class QidianWriterItem(scrapy.Item):
     wUUID = scrapy.Field()  # 作者UUID
@@ -38,3 +40,4 @@ class QidianWriterItem(scrapy.Item):
     wWorks = scrapy.Field() # 作品总数
     wWorkKeys = scrapy.Field()  # 累计字数
     wWorkDays = scrapy.Field()  # 创作天数
+    isD = scrapy.Field()    # 是否属于删除状态

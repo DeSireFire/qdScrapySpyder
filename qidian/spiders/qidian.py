@@ -236,15 +236,83 @@ class QidianSpider(scrapy.Spider):
         '''
         urlList = response.xpath(response.meta['xpath'][0][0]+'@href').extract()[response.meta['xpath'][0][1]:response.meta['xpath'][0][2]]
         nameList = response.xpath(response.meta['xpath'][0][0]+'text()').extract()[response.meta['xpath'][0][1]:response.meta['xpath'][0][2]]
+        if len(nameList) != len(response.meta['item']['小说目录']):
+            print("笔趣阁章节数：%s  起点章节数：%s"%(len(nameList),len(response.meta['item']['小说目录'])))
+            if len(nameList) > len(response.meta['item']['小说目录']):
+                tempList = [i['章节名'] for i in response.meta['item']['小说目录']]
+                print(list(set(nameList).difference(set(tempList))))
+        else:
+            for url, info in zip(urlList, response.meta['item']['小说目录']):
+                yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
 
 
 
 
     def content_downLoader(self,response):
-        # print(len(response.xpath(response.meta['xpath'][0]).extract()))
-        with open(os.path.join(os.getcwd(),'log','qidian','%s.txt'%response.meta['item']['章节名']), 'w', encoding='utf-8') as f:
-            # f.write(response.xpath(response.meta['xpath'][0]).extract()[response.meta['xpath'][1]:response.meta['xpath'][2]])
-            f.write(self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[0]))
+        pass
+        # # print(len(response.xpath(response.meta['xpath'][0]).extract()))
+        # with open(os.path.join(os.getcwd(),'log','qidian','%s.txt'%response.meta['item']['章节名']), 'w', encoding='utf-8') as f:
+        #     # f.write(response.xpath(response.meta['xpath'][0]).extract()[response.meta['xpath'][1]:response.meta['xpath'][2]])
+        #     f.write(self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[0]))
+
+
+    def qItem(self,tempDict):
+        '''
+        小说基础信息
+        :param tempDict:你懂的
+        :return:
+        '''
+        from qidian.items import QidianItem
+        item = QidianItem()
+        item['bImgBase64'] = tempDict['书封面']  # 封面
+        item['bName'] = tempDict['书名']  # 书名
+        item['bKeys'] = tempDict['总字数']  # 总字数
+        item['bResClick'] = tempDict['总点击数']  # 总点击数
+        item['bClick'] = tempDict['阅文总点击']  # 阅文总点击
+        item['bVIPClick'] = tempDict['会员周点击']  # 会员周点击
+        item['bResRecommend'] = tempDict['总推荐']  # 总推荐
+        item['bWeekRecommend'] = tempDict['周推荐']  # 周推荐
+        item['bWriterName'] = tempDict['作者信息']['作者UUID']  # 作者UUID
+        item['bAction'] = tempDict['连载状态']  # 连载状态
+        item['bType'] = tempDict['分类']  # 分类
+        item['bIntro'] = tempDict['简介']  # 简介
+        item['bMoreIntro'] = tempDict['介绍']  # 介绍
+        item['bURL'] = tempDict['书源URL']  # 书源URL
+        item['bIndex'] = tempDict['小说目录']  # 小说目录
+        item['isD'] = 0  # 是否属于删除状态
+        yield item
+
+    def qChapterItem(self, tempDict):
+        '''
+        小说正文
+        :param tempDict:你懂的
+        :return:
+        '''
+        from qidian.items import QidianChapterItem
+        item = QidianChapterItem()
+        item['cTitle'] = tempDict['所属卷名']  # '所属卷名': temp['所属卷名'],
+        item['cName'] = tempDict['章节名']  # '章节名': temp['cN'],
+        item['cUT'] = tempDict['更新时间']  # '更新时间': temp['uT'],
+        item['cKeys'] = tempDict['字数']  # '字数': temp['cnt'],
+        item['isD'] = 0  # 是否属于删除状态
+        yield item
+
+    def qWriterItem(self, tempDict):
+        '''
+        小说作者信息
+        :param tempDict:你懂的
+        :return:
+        '''
+        from qidian.items import QidianWriterItem
+        item = QidianWriterItem()
+        item['wUUID'] = tempDict['作者UUID']  # 作者UUID
+        item['wName'] = tempDict['姓名']  # 姓名
+        item['wItro'] = tempDict['作者简介']  # 作者简介
+        item['wWorks'] = tempDict['作品总数']  # 作品总数
+        item['wWorkKeys'] = tempDict['累计字数']  # 累计字数
+        item['wWorkDays'] = tempDict['创作天数']  # 创作天数
+        item['isD'] = 0  # 是否属于删除状态
+        yield item
 
 
     # 工具函数
