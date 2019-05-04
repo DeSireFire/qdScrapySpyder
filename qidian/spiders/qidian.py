@@ -316,6 +316,10 @@ class QidianSpider(scrapy.Spider):
 
 
     # 工具函数
+    def fontAnti(self,):
+        from fontTools.ttLib import TTFont
+
+
     def imgToBase64(self,imgId):
         import requests, base64
         myheader = {
