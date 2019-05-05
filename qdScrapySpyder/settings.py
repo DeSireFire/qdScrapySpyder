@@ -9,10 +9,10 @@
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'qidian'
+BOT_NAME = 'qdScrapySpyder'
 
-SPIDER_MODULES = ['qidian.spiders']
-NEWSPIDER_MODULE = 'qidian.spiders'
+SPIDER_MODULES = ['qdScrapySpyder.spiders']
+NEWSPIDER_MODULE = 'qdScrapySpyder.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -71,7 +71,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 750,
     # 'scrapy.downloadermiddlewares.stats.DownloaderStats': 850,
     # 'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware': 900,
-    'qidian.middlewares.RandomUserAgentMiddleware': 554,
+    'qdScrapySpyder.middlewares.RandomUserAgentMiddleware': 554,
     # 'qidian.middlewares.ProxyMiddleware': 555,
 }
 
@@ -117,8 +117,8 @@ MYSQL_PASSWORD = 'test'
 MYSQL_PORT = 3306
 
 # 代理设置
-PROXY_URL = '233'
+PROXY_URL = 'test'
 
 # 重试次数
-RETRY_TIMES = 10
+RETRY_TIMES = 3
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import scrapy,re,os.path,json,difflib,time
+import scrapy,re,os.path,json,difflib,datetime
 # import chardet,random,datetime,
 
 class QidianSpider(scrapy.Spider):
@@ -113,14 +113,14 @@ class QidianSpider(scrapy.Spider):
         url5 = 'https://www.zwdu.com/search.php?keyword=%s' % (tempdict['书名'])
         request5 = scrapy.Request(url5, callback=self.content_handlerFifth, meta={"item": tempdict})
 
-        request1.meta['requests'] = [
+        request3.meta['requests'] = [
             request3,
             request4,
             request2,
             request5,
         ]
 
-        return request1
+        return request3
 
     def content_handlerFirst(self, response):
         '''
@@ -131,6 +131,7 @@ class QidianSpider(scrapy.Spider):
         # 其他小说网站正则（用于获取小说具体地址（含所有章节表的网页地址）例如：https://www.biquge.com.cn/book/23488/）
         bookURL = '<a cpos="title" href="([\s\S]*?)" title="%s" class="result-game-item-title-link" target="_blank">' %response.meta['item']['书名']
         # 判断可能存在系列续集小说名字不对应的情况，例如：“斗罗大陆III龙王传说”变成“龙王传说”才能检索到
+        print(response.status)
         if '暂无' in self.reglux(response.text, bookURL, False)[0] or response.meta['item']['最新章节'] not in response.text:
             print('未查找到 %s 或未发现该书有最新章节 %s ，URL: %s' % (
             response.meta['item']['书名'], response.meta['item']['最新章节'], response.url))
@@ -184,8 +185,9 @@ class QidianSpider(scrapy.Spider):
                 "item": response.meta['item'],
                 'requests': response.meta['requests'],
                 'xpath': [
-                    ("/html/body/div[@id='wrapper']/div[@class='box_con'][2]/div[@id='list']/dl/dd/a/", 12, None,),
-                    ("/html/body/div[@class='content_read']/div[@class='box_con']/div[@id='content']", 0, None)],
+                    ("/html/body/div[@id='wrapper']/div[@class='box_con'][2]/div[@id='list']/dl/dd/a/", 12, None,),# 章节
+                    ("/html/body/div[@class='content_read']/div[@class='box_con']/div[@id='content']", 0, None),# 正文
+                ],
                 'url_home': r'http://www.560xs.com',
                 'updateBool':self.custom_settings['updateBool'],# 是否只爬取最新的章节
             }
@@ -243,11 +245,28 @@ class QidianSpider(scrapy.Spider):
         urlList = response.xpath(response.meta['xpath'][0][0]+'@href').extract()[response.meta['xpath'][0][1]:response.meta['xpath'][0][2]]
         nameList = response.xpath(response.meta['xpath'][0][0]+'text()').extract()[response.meta['xpath'][0][1]:response.meta['xpath'][0][2]]
         if len(nameList) != len(response.meta['item']['小说目录']):
-            print("笔趣阁章节数：%s  起点章节数：%s"%(len(nameList),len(response.meta['item']['小说目录'])))
-            if len(nameList) > len(response.meta['item']['小说目录']):
-                tempList = [i['章节名'] for i in response.meta['item']['小说目录']]
-                print(list(set(nameList).difference(set(tempList))))
-                print([i for i in nameList if i not in tempList])
+                if response.meta['updateBool']:# 是否只爬取最新的章节
+                    info = {
+                        '文章顺序': len(nameList),
+                        '所属小说名': response.meta['item']['书名'],
+                        '所属卷名': '正文卷',
+                        '章节名': nameList[-1],
+                        '更新时间': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        '字数': 0,
+                    }
+                    yield scrapy.Request(url=response.meta['url_home'] + urlList[-1], callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
+                else:
+                    for name, url in zip(nameList, urlList):
+                        info = {
+                            '文章顺序': nameList.index(name) + 1,
+                            '所属小说名': response.meta['item']['书名'],
+                            '所属卷名': '正文卷',
+                            '章节名': name,
+                            '更新时间': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            '字数': 0,
+                            '正文':'',
+                        }
+                        yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
         else:
             for url, info in zip(urlList, response.meta['item']['小说目录']):
                 yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
@@ -256,7 +275,9 @@ class QidianSpider(scrapy.Spider):
 
 
     def content_downLoader(self,response):
-        pass
+        response.meta['item']['正文'] = self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[0])
+        response.meta['item']['字数'] = len(self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[0]))
+        self.qChapterItem(response.meta['item'])
         # # print(len(response.xpath(response.meta['xpath'][0]).extract()))
         # with open(os.path.join(os.getcwd(),'log','qidian','%s.txt'%response.meta['item']['章节名']), 'w', encoding='utf-8') as f:
         #     # f.write(response.xpath(response.meta['xpath'][0]).extract()[response.meta['xpath'][1]:response.meta['xpath'][2]])
@@ -269,7 +290,7 @@ class QidianSpider(scrapy.Spider):
         :param tempDict:你懂的
         :return:
         '''
-        from qidian.items import QidianItem
+        from qdScrapySpyder.items import QidianItem
         item = QidianItem()
         item['bImgBase64'] = tempDict['书封面']  # 封面
         item['bName'] = tempDict['书名']  # 书名
@@ -295,13 +316,15 @@ class QidianSpider(scrapy.Spider):
         :param tempDict:你懂的
         :return:
         '''
-        from qidian.items import QidianChapterItem
+        from qdScrapySpyder.items import QidianChapterItem
         item = QidianChapterItem()
-        item['cBook'] = tempDict['所属小说名']  # '所属卷名': temp['所属卷名'],
-        item['cTitle'] = tempDict['所属卷名']  # '所属卷名': temp['所属卷名'],
-        item['cName'] = tempDict['章节名']  # '章节名': temp['cN'],
-        item['cUT'] = tempDict['更新时间']  # '更新时间': temp['uT'],
-        item['cKeys'] = tempDict['字数']  # '字数': temp['cnt'],
+        item['cOrder'] = tempDict['文章顺序']  # '文章顺序'
+        item['cBook'] = tempDict['所属小说名']  # '所属卷名'
+        item['cTitle'] = tempDict['所属卷名']  # '所属卷名'
+        item['cName'] = tempDict['章节名']  # '章节名'
+        item['cUT'] = tempDict['更新时间']  # '更新时间'
+        item['cKeys'] = tempDict['字数']  # '字数'
+        item['cContent'] = tempDict['正文']  # '字数'
         item['isD'] = 0  # 是否属于删除状态
         yield item
 
@@ -311,7 +334,7 @@ class QidianSpider(scrapy.Spider):
         :param tempDict:你懂的
         :return:
         '''
-        from qidian.items import QidianWriterItem
+        from qdScrapySpyder.items import QidianWriterItem
         item = QidianWriterItem()
         item['wUUID'] = tempDict['作者UUID']  # 作者UUID
         item['wName'] = tempDict['姓名']  # 姓名
