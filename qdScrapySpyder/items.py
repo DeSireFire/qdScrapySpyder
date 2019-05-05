@@ -22,7 +22,7 @@ class QidianItem(scrapy.Item):
     bIntro = scrapy.Field()    # 简介
     bMoreIntro = scrapy.Field()    # 介绍
     bURL = scrapy.Field()    # 书源URL
-    bIndex = scrapy.Field()    # 小说目录
+    # bIndex = scrapy.Field()    # 小说目录
     bImgBase64 = scrapy.Field()    # 封面
     isD = scrapy.Field()    # 是否属于删除状态
 

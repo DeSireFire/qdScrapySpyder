@@ -244,6 +244,13 @@ class QidianSpider(scrapy.Spider):
         '''
         urlList = response.xpath(response.meta['xpath'][0][0]+'@href').extract()[response.meta['xpath'][0][1]:response.meta['xpath'][0][2]]
         nameList = response.xpath(response.meta['xpath'][0][0]+'text()').extract()[response.meta['xpath'][0][1]:response.meta['xpath'][0][2]]
+
+        # 小说基础信息表
+        self.qItem(response.meta['item'])
+
+        # 作者信息表
+        self.qWriterItem(response.meta['item']['作者信息'])
+
         if len(nameList) != len(response.meta['item']['小说目录']):
                 if response.meta['updateBool']:# 是否只爬取最新的章节
                     info = {
@@ -266,7 +273,7 @@ class QidianSpider(scrapy.Spider):
                             '字数': 0,
                             '正文':'',
                         }
-                        yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
+                        # yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
         else:
             for url, info in zip(urlList, response.meta['item']['小说目录']):
                 yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
@@ -306,8 +313,9 @@ class QidianSpider(scrapy.Spider):
         item['bIntro'] = tempDict['简介']  # 简介
         item['bMoreIntro'] = tempDict['介绍']  # 介绍
         item['bURL'] = tempDict['书源URL']  # 书源URL
-        item['bIndex'] = tempDict['小说目录']  # 小说目录
+        # item['bIndex'] = tempDict['小说目录']  # 小说目录
         item['isD'] = 0  # 是否属于删除状态
+        print(item)
         yield item
 
     def qChapterItem(self, tempDict):
