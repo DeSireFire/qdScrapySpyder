@@ -7,9 +7,10 @@ class QidianSpider(scrapy.Spider):
     allowed_domains = ["qidian.com","560xs.com","biquge.com.cn","biqusoso.com","biquge5200.cc","xbiquge6.com","zwdu.com"]
     start_urls = ['https://book.qidian.com/info/1']
 
-    # custom_settings = {
-    #     # 'COOKIES_ENABLED':False,
-    # }
+    custom_settings = {
+        # 'COOKIES_ENABLED':False,
+        'updateBool': False,  # 是否只爬取最新的章节
+    }
 
     '''
     正则大军
@@ -145,6 +146,7 @@ class QidianSpider(scrapy.Spider):
                           # ("/html/body/div[@id='wrapper']/div[@class='content_read']/div[@class='box_con']/div[@id='content']/text()",0,None)],
                           ("/html/body/div[@id='wrapper']/div[@class='content_read']/div[@class='box_con']/div[@id='content']", 0, None)],
                 'url_home': r'https://www.biquge.com.cn',
+                'updateBool':self.custom_settings['updateBool'],# 是否只爬取最新的章节
             }
             yield scrapy.Request(url=self.reglux(response.text, bookURL, False)[0], callback=self.content_handler, meta=meta)
 
@@ -165,6 +167,7 @@ class QidianSpider(scrapy.Spider):
                 'xpath': [("/html/body/div[@id='wrapper']/div[@class='box_con'][2]/div[@id='list']/dl/dd/a/", 9, None,),
                           ("/html/body/div[@id='wrapper']/div[@class='content_read']/div[@class='box_con']/div[@id='content']", 0, None)],
                 'url_home': r'',
+                'updateBool':self.custom_settings['updateBool'],# 是否只爬取最新的章节
             }
             yield scrapy.Request(url=self.reglux(response.text, bookURL, False)[0], callback=self.content_handler, meta=meta)
 
@@ -184,6 +187,7 @@ class QidianSpider(scrapy.Spider):
                     ("/html/body/div[@id='wrapper']/div[@class='box_con'][2]/div[@id='list']/dl/dd/a/", 12, None,),
                     ("/html/body/div[@class='content_read']/div[@class='box_con']/div[@id='content']", 0, None)],
                 'url_home': r'http://www.560xs.com',
+                'updateBool':self.custom_settings['updateBool'],# 是否只爬取最新的章节
             }
             yield scrapy.Request(url='http://www.560xs.com%s' % self.reglux(response.text, bookURL, True)[0], callback=self.content_handler, meta=meta)
 
@@ -203,6 +207,7 @@ class QidianSpider(scrapy.Spider):
                 'xpath': [("/html/body/div[@id='wrapper']/div[@class='box_con'][2]/div[@id='list']/dl/dd/a/", 0, None,),
                           ("/html/body/div[@id='wrapper']/div[@class='content_read']/div[@class='box_con']/div[@id='content']", 0, None)],
                 'url_home': r'https://www.xbiquge6.com',
+                'updateBool':self.custom_settings['updateBool'],# 是否只爬取最新的章节
             }
             yield scrapy.Request(url=self.reglux(response.text, bookURL, False)[0], callback=self.content_handler, meta=meta)
 
@@ -221,6 +226,7 @@ class QidianSpider(scrapy.Spider):
                 'xpath': [("/html/body/div[@id='wrapper']/div[@class='box_con'][2]/div[@id='list']/dl/dd/a/", 0, None,),
                           ("/html/body/div[@id='wrapper']/div[@class='content_read']/div[@class='box_con']/div[@id='content']", 0, None)],
                 'url_home': r'',
+                'updateBool':self.custom_settings['updateBool'],# 是否只爬取最新的章节
             }
             yield scrapy.Request(url=self.reglux(response.text, bookURL, False)[0], callback=self.content_handler ,meta=meta)
 
@@ -241,6 +247,7 @@ class QidianSpider(scrapy.Spider):
             if len(nameList) > len(response.meta['item']['小说目录']):
                 tempList = [i['章节名'] for i in response.meta['item']['小说目录']]
                 print(list(set(nameList).difference(set(tempList))))
+                print([i for i in nameList if i not in tempList])
         else:
             for url, info in zip(urlList, response.meta['item']['小说目录']):
                 yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
@@ -290,6 +297,7 @@ class QidianSpider(scrapy.Spider):
         '''
         from qidian.items import QidianChapterItem
         item = QidianChapterItem()
+        item['cBook'] = tempDict['所属小说名']  # '所属卷名': temp['所属卷名'],
         item['cTitle'] = tempDict['所属卷名']  # '所属卷名': temp['所属卷名'],
         item['cName'] = tempDict['章节名']  # '章节名': temp['cN'],
         item['cUT'] = tempDict['更新时间']  # '更新时间': temp['uT'],
@@ -317,8 +325,13 @@ class QidianSpider(scrapy.Spider):
 
     # 工具函数
     def fontAnti(self,):
-        from fontTools.ttLib import TTFont
-
+        '''
+        todo 字体反爬
+        :return:
+        '''
+        # from fontTools.ttLib import TTFont
+        # 没戏没戏
+        pass
 
     def imgToBase64(self,imgId):
         import requests, base64

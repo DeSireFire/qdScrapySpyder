@@ -115,3 +115,10 @@ MYSQL_DATABASE = 'test' # 数据库名
 MYSQL_USER = 'test'
 MYSQL_PASSWORD = 'test'
 MYSQL_PORT = 3306
+
+# 代理设置
+PROXY_URL = '233'
+
+# 重试次数
+RETRY_TIMES = 10
+

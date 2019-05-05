@@ -27,10 +27,11 @@ class QidianItem(scrapy.Item):
     isD = scrapy.Field()    # 是否属于删除状态
 
 class QidianChapterItem(scrapy.Item):
-    cTitle = scrapy.Field()  # '所属卷名': temp['所属卷名'],
-    cName = scrapy.Field()  # '章节名': temp['cN'],
-    cUT = scrapy.Field()  # '更新时间': temp['uT'],
-    cKeys = scrapy.Field()  # '字数': temp['cnt'],
+    cBook = scrapy.Field()  # '所属小说名名'
+    cTitle = scrapy.Field()  # '所属卷名'
+    cName = scrapy.Field()  # '章节名'
+    cUT = scrapy.Field()  # '更新时间'
+    cKeys = scrapy.Field()  # '字数'
     isD = scrapy.Field()    # 是否属于删除状态
 
 class QidianWriterItem(scrapy.Item):
