@@ -7,26 +7,37 @@
 
 import scrapy
 
-
+'''
+字段名与类中的变量名相同即可
+其中，QidianItem中的bWriterName对应的是QidianWriterItem的wUUID
+'''
 class QidianItem(scrapy.Item):
+    '''
+    表名：QidianItem
+    变量名对应数据库字段名
+    '''
     bName = scrapy.Field()    # 书名
     bKeys = scrapy.Field()    # 总字数
-    bResClick = scrapy.Field()    # 总点击数
-    bClick = scrapy.Field()    # 阅文总点击
-    bVIPClick = scrapy.Field()    # 会员周点击
-    bResRecommend = scrapy.Field()    # 总推荐
-    bWeekRecommend = scrapy.Field()    # 周推荐
+    bResClick = scrapy.Field()    # 总点击数（预留）
+    bClick = scrapy.Field()    # 阅文总点击（预留）
+    bVIPClick = scrapy.Field()    # 会员周点击（预留）
+    bResRecommend = scrapy.Field()    # 总推荐（预留）
+    bWeekRecommend = scrapy.Field()    # 周推荐（预留）
     bWriterName = scrapy.Field()    # 作者UUID
     bAction = scrapy.Field()    # 连载状态
     bType = scrapy.Field()    # 分类
     bIntro = scrapy.Field()    # 简介
     bMoreIntro = scrapy.Field()    # 介绍
     bURL = scrapy.Field()    # 书源URL
-    # bIndex = scrapy.Field()    # 小说目录
+    # bIndex = scrapy.Field()    # 小说目录（没必要）
     bImgBase64 = scrapy.Field()    # 封面
     isD = scrapy.Field()    # 是否属于删除状态
 
 class QidianChapterItem(scrapy.Item):
+    '''
+    表名：QidianChapterItem
+    变量名对应数据库字段名
+    '''
     cOrder = scrapy.Field()  # '所属小说顺序'
     cBook = scrapy.Field()  # '所属小说名'
     cTitle = scrapy.Field()  # '所属卷名'
@@ -37,6 +48,10 @@ class QidianChapterItem(scrapy.Item):
     isD = scrapy.Field()    # 是否属于删除状态
 
 class QidianWriterItem(scrapy.Item):
+    '''
+    表名：QidianWriterItem
+    变量名对应数据库字段名
+    '''
     wUUID = scrapy.Field()  # 作者UUID
     wName = scrapy.Field()  # 姓名
     wItro = scrapy.Field()  # 作者简介
