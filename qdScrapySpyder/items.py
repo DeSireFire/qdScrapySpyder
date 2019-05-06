@@ -23,7 +23,7 @@ class QidianItem(scrapy.Item):
     bVIPClick = scrapy.Field()    # 会员周点击（预留）
     bResRecommend = scrapy.Field()    # 总推荐（预留）
     bWeekRecommend = scrapy.Field()    # 周推荐（预留）
-    bWriterName = scrapy.Field()    # 作者UUID
+    bWriterName = scrapy.Field()    # 作者名
     bAction = scrapy.Field()    # 连载状态
     bType = scrapy.Field()    # 分类
     bIntro = scrapy.Field()    # 简介
@@ -42,6 +42,7 @@ class QidianChapterItem(scrapy.Item):
     cBook = scrapy.Field()  # '所属小说名'
     cTitle = scrapy.Field()  # '所属卷名'
     cName = scrapy.Field()  # '章节名'
+    fullName = scrapy.Field() # '章节全名，建议建立 唯一索引 例如：放开那个女巫_正文卷_第一千四百六十八章 燃点'
     cUT = scrapy.Field()  # '更新时间'
     cKeys = scrapy.Field()  # '字数'
     cContent = scrapy.Field()  # '字数'

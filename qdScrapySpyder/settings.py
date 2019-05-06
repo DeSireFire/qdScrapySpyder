@@ -83,9 +83,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'qidian.pipelines.QidianPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'qdScrapySpyder.pipelines.QidianPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -110,10 +110,10 @@ HTTPCACHE_ENABLED = True
 
 # 数据库信息
 # MYSQL
-MYSQL_HOST = '192.168.37.128' # 数据库地址
-MYSQL_DATABASE = 'test' # 数据库名
-MYSQL_USER = 'test'
-MYSQL_PASSWORD = 'test'
+MYSQL_HOST = '45.77.254.61' # 数据库地址
+MYSQL_DATABASE = 'qidianTest' # 数据库名
+MYSQL_USER = 'qidianTest'
+MYSQL_PASSWORD = 'KDNiL2rRanD7ndfr'
 MYSQL_PORT = 3306
 
 # 代理设置
