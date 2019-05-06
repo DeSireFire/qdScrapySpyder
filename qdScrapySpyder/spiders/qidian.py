@@ -94,8 +94,6 @@ class QidianSpider(scrapy.Spider):
         # 最新章节名
         tempdict['最新章节'] = tempdict['小说目录'][-1]['章节名']
 
-        # todo 此处可把小说基础信息item通过tempdict入库
-        # print(tempdict) item{......}
 
         # todo 正文内容的开始
         url1 = 'https://www.biquge.com.cn/search.php?keyword=%s' % (tempdict['书名'])
@@ -315,7 +313,6 @@ class QidianSpider(scrapy.Spider):
         item['bURL'] = tempDict['书源URL']  # 书源URL
         # item['bIndex'] = tempDict['小说目录']  # 小说目录
         item['isD'] = 0  # 是否属于删除状态
-        print(item)
         yield item
 
     def qChapterItem(self, tempDict):
