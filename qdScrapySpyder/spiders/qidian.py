@@ -5,7 +5,7 @@ import scrapy,re,os.path,json,difflib,datetime,time
 class QidianSpider(scrapy.Spider):
     name = "qidian"
     allowed_domains = ["qidian.com","560xs.com","biquge.com.cn","biqusoso.com","biquge5200.cc","xbiquge6.com","zwdu.com"]
-    start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(1, 20)]
+    start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(1, 5000)]
 
     custom_settings = {
         # 'COOKIES_ENABLED':False,
@@ -28,8 +28,8 @@ class QidianSpider(scrapy.Spider):
     book_introMore = '<div class="book-intro">\r                        <p>\r                            \r                                ([\s\S]*?)\r                            \r                        </p>\r                    </div>'
     book_title = r'class="iconfont">&#xe636;</b>分卷阅读</em></a>([\s\S]*?)<i>'
     book_cha = '<a class="red-btn J-getJumpUrl " href="([\s\S]*?)" id="readBtn" data-eid="qd_G03" data-bid="([\s\S]*?)" data-firstchapterjumpurl="([\s\S]*?)">'
-    # book_nextPage = '<ahref="([\s\S]*?)"class="lbf-pagination-next">&gt;</a>'
-    book_nextPage = '<li class="lbf-pagination-item"><a href="([\s\S]*?)" class="lbf-pagination-next ">&gt;</a>'
+
+    book_img_X = "//body//div//div[@class='book-img']/a[@id='bookImg']/img/@src"
     set_cookie = ''
 
     def parse(self, response):
@@ -43,11 +43,9 @@ class QidianSpider(scrapy.Spider):
             yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True, meta={'dont_retry':True})
 
     def parse_novel_info(self, response):
-        print('到详细页')
-        # print(self.set_cookie)
         BI_resdict = {
             '书id':response.url[29:],
-            # '书封面':self.imgToBase64(response.url[29:]),
+            '书封面':self.imgToBase64('https:%s'%response.xpath(self.book_img_X).extract()[0].strip()),
             '书名':self.reglux(response.text, self.book_name_writer, False)[0][0],
             '总字数':0,
             '总点击数':'',
@@ -70,11 +68,6 @@ class QidianSpider(scrapy.Spider):
             '书源URL':response.url,
             '小说目录':{},
         }
-        # indextext = response.xpath(".//body//div//div[@class='volume-wrap']/div//li/a/text()").extract()
-        # if not indextext:
-        #     indextext = response.xpath("//body/div[@class='wrap']/div[@class='book-detail-wrap center990']/div[@id='j-catalogWrap']/div[@class='volume-wrap']/div[@class='volume']/ul[@class='cf']/li/a/text()").extract()
-        # print(indextext)
-
         index_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = BI_resdict['书id'])
         yield scrapy.Request(url=index_url, callback=self.ajax_index, meta={"item": BI_resdict})
 
@@ -105,6 +98,7 @@ class QidianSpider(scrapy.Spider):
             '''
             # 笔趣阁1
             url1 = 'https://www.biquge.com.cn/search.php?keyword=%s' % (tempdict['书名'])
+            print(url1)
             request1 = scrapy.Request(url1, callback=self.content_handler_1, meta={"item": tempdict})
 
             # 若发现网站中不存小说或没有最新的小说章节则跳到下一个网站爬取，meta['requests']列表决定网站的顺序
@@ -113,7 +107,7 @@ class QidianSpider(scrapy.Spider):
                 # request2,
                 # request3,
             ]
-            # return request1
+            yield request1
 
     def content_handler_1(self, response):
         '''
@@ -318,6 +312,7 @@ class QidianSpider(scrapy.Spider):
         # 没戏没戏
         pass
 
+    @classmethod
     def imgToBase64(self,imgId):
         '''
         小说封面图获取并转base64
@@ -330,7 +325,7 @@ class QidianSpider(scrapy.Spider):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
         }
         # print("封面地址：https://bookcover.yuewen.com/qdbimg/349573/%s/180"%imgId)
-        req = requests.get(url="https://bookcover.yuewen.com/qdbimg/349573/%s/180"%imgId, headers=myheader)
+        req = requests.get(url=imgId.replace('%0D',''), headers=myheader)
         base64_data = base64.b64encode(req.content)
         return 'data:image/jpg;base64,' + bytes.decode(base64_data)
 
@@ -340,7 +335,7 @@ class QidianSpider(scrapy.Spider):
         :return: 基于MAC地址、当前时间戳、随机数生成。
         '''
         import uuid
-        return uuid.uuid1()
+        return str(uuid.uuid1())
 
     def CtoE(self,tempStr):
         '''
@@ -402,3 +397,6 @@ class QidianSpider(scrapy.Spider):
             return temp
         else:
             return ['暂无具体信息...']
+
+if __name__ == '__main__':
+    print(QidianSpider.imgToBase64('https://bookcover.yuewen.com/qdbimg/349573/2571593/180'))
