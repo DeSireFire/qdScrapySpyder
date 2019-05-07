@@ -104,6 +104,6 @@ venv.bak/
 .mypy_cache/
 .idea
 .scrapy/
-Scrapy_zzuliacgn/customSettings.py
-Scrapy_zzuliacgn/tools/aixinxi_config.py
+qdScrapySpyder/customSettings.py
+qdScrapySpyder/settings.py
 log/
