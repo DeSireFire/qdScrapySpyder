@@ -124,22 +124,22 @@ class RandomUserAgentMiddleware(object):
                 return False
 
         # 强制使用代理
-        # def process_request(self, request, spider):
-        #     proxy = self.get_random_proxy()
-        #     if proxy:
-        #         url = 'https://{proxy}'.format(proxy=proxy)
-        #         self.logger.debug('使用代理 %s'%proxy)
-        #         request.meta['proxy'] = url
+        def process_request(self, request, spider):
+            proxy = self.get_random_proxy()
+            if proxy:
+                url = 'https://{proxy}'.format(proxy=proxy)
+                self.logger.debug('使用代理 %s'%proxy)
+                request.meta['proxy'] = url
 
         # 重试时使用代理
-        def process_request(self, request, spider):
-            if request.meta.get('retry_times'):
-                proxy = self.get_random_proxy()
-                if proxy:
-                    url = 'https://{proxy}'.format(proxy=proxy)
-                    print(url)
-                    self.logger.debug('使用代理 %s' % proxy)
-                    request.meta['proxy'] = url
+        # def process_request(self, request, spider):
+        #     if request.meta.get('retry_times'):
+        #         proxy = self.get_random_proxy()
+        #         if proxy:
+        #             url = 'https://{proxy}'.format(proxy=proxy)
+        #             print(url)
+        #             self.logger.debug('使用代理 %s' % proxy)
+        #             request.meta['proxy'] = url
 
         @classmethod
         def from_crawler(cls, crawler):

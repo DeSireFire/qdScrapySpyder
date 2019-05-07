@@ -5,7 +5,7 @@ import scrapy,re,os.path,json,difflib,datetime,time
 class QidianSpider(scrapy.Spider):
     name = "qidian"
     allowed_domains = ["qidian.com","560xs.com","biquge.com.cn","biqusoso.com","biquge5200.cc","xbiquge6.com","zwdu.com"]
-    start_urls = ['https://book.qidian.com/info/1']
+    start_urls = ['https://www.qidian.com/all?page=1']
 
     custom_settings = {
         # 'COOKIES_ENABLED':False,
@@ -28,31 +28,50 @@ class QidianSpider(scrapy.Spider):
     book_introMore = '<div class="book-intro">\r                        <p>\r                            \r                                ([\s\S]*?)\r                            \r                        </p>\r                    </div>'
     book_title = r'class="iconfont">&#xe636;</b>分卷阅读</em></a>([\s\S]*?)<i>'
     book_cha = '<a class="red-btn J-getJumpUrl " href="([\s\S]*?)" id="readBtn" data-eid="qd_G03" data-bid="([\s\S]*?)" data-firstchapterjumpurl="([\s\S]*?)">'
+    # book_nextPage = '<ahref="([\s\S]*?)"class="lbf-pagination-next">&gt;</a>'
+    book_nextPage = '<li class="lbf-pagination-item"><a href="([\s\S]*?)" class="lbf-pagination-next ">&gt;</a>'
+    set_cookie = ''
 
-
-
-    def start_requests(self):
-        # while True:
-            for page in range(1,2):
-            # for page in range(1,5010):
-                print("开始获取第%s页的小说"%page)
-                visited_url='https://www.qidian.com/all?orderId=&style=1&pageSize=20&siteid=1&pubflag=0&hiddenField=0&page=%s'%page
-                yield scrapy.Request(url=visited_url,callback=self.parse)
-            # 起点全部小说也爬取完，改成只爬取最新章节
-            # self.custom_settings['updateBool'] = True
+    # def start_requests(self):
+    #     # for page in range(1,2):
+    #     for page in range(1,20):
+    #         print("开始获取第%s页的小说"%page)
+    #         visited_url='https://www.qidian.com/all?orderId=&style=1&pageSize=20&siteid=1&pubflag=0&hiddenField=0&page=%s'%page
+    #         yield scrapy.Request(url=visited_url,callback=self.parse)
 
     def parse(self, response):
-        # print(self.reglux(response.text, self.book_url, False))
-        if '暂无具体信息...' in self.reglux(response.text, self.book_url, False):
-            print('爬取过快，起点小说列表获取失败！')
-        for i in self.reglux(response.text, self.book_url, False):
-            yield scrapy.Request(url='https://book.qidian.com/info/%s'%i[-2], callback=self.parse_novel_info,meta={'csrf':str(response.headers.getlist("Set-Cookie")[0],encoding = "utf-8").split(';')[0]})
+        urls = response.xpath("/html/body/div[@class='wrap']/div[@class='all-pro-wrap box-center cf']/div[@class='main-content-wrap fl']/div[@class='all-book-list']/div[@class='book-img-text']/ul[@class='all-img-list cf']/li/div[@class='book-img-box']/a/@href").extract()
+        if urls:
+            for i in urls:
+                if response.headers.getlist("Set-Cookie"):
+                    self.set_cookie = str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]
+                # yield scrapy.Request(url='https:%s'%i, callback=self.parse_novel_info)
+        else:
+            yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True)
+
+        next_page = self.reglux(response.text,self.book_nextPage,False)[0].split('<li class="lbf-pagination-item"><a href="')[-1]
+        print(next_page)
+
+        if '暂无具体信息' not in next_page:
+            if int(next_page.split('page=')[-1])< 50:
+                yield scrapy.Request(url='https:%s'%next_page, callback=self.parse)
+        else:
+            yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True)
+
+    def non_stop_function(self, response):
+        print('到我这里')
+        print(self.set_cookie)
+        # from twisted.internet import reactor, defer
+        # d = defer.Deferred()
+        # reactor.callLater(10.0, d.callback, scrapy.Request(url='https://book.qidian.com/info/%s'%i[-2], callback=self.parse_novel_info,meta={'csrf':str(response.headers.getlist("Set-Cookie")[0],encoding = "utf-8").split(';')[0]}))
 
 
     def parse_novel_info(self, response):
+        print('到详细页')
+        # print(self.set_cookie)
         BI_resdict = {
             '书id':response.url[29:],
-            '书封面':self.imgToBase64(response.url[29:]),
+            # '书封面':self.imgToBase64(response.url[29:]),
             '书名':self.reglux(response.text, self.book_name_writer, False)[0][0],
             '总字数':0,
             '总点击数':'',
@@ -75,42 +94,45 @@ class QidianSpider(scrapy.Spider):
             '书源URL':response.url,
             '小说目录':{},
         }
-        index_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = response.meta['csrf'],bookeId = BI_resdict['书id'])
+
+        index_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = BI_resdict['书id'])
         yield scrapy.Request(url=index_url, callback=self.ajax_index, meta={"item": BI_resdict})
 
     def ajax_index(self,response):
         datas = json.loads(response.text)
         tempdict = response.meta['item']
+        # 获取速度过快，导致失败
         if 'data' not in datas:
             print(response.url)
             print(datas)
-        indexList = []
-        for i in list(datas['data']['vs']):
-            for n in i['cs']:   # {'uuid': 73, 'cN': '第七十章 期待', 'uT': '2016-12-05 15:08:26', 'cnt': 2826, 'cU': '_AaqI-dPJJ4uTkiRw_sFYA2/35xIQH46UOnwrjbX3WA1AA2', 'id': 343467910, 'sS': 1}
-                n['所属卷名'] = i['vN']
-                tempdict['总字数'] += n['cnt'] # 字数统计
-                indexList.append(self.chaster_handler(n))
+        else:
+            indexList = []
+            for i in list(datas['data']['vs']):
+                for n in i['cs']:   # {'uuid': 73, 'cN': '第七十章 期待', 'uT': '2016-12-05 15:08:26', 'cnt': 2826, 'cU': '_AaqI-dPJJ4uTkiRw_sFYA2/35xIQH46UOnwrjbX3WA1AA2', 'id': 343467910, 'sS': 1}
+                    n['所属卷名'] = i['vN']
+                    tempdict['总字数'] += n['cnt'] # 字数统计
+                    indexList.append(self.chaster_handler(n))
 
-        tempdict['小说目录'] = indexList
+            tempdict['小说目录'] = indexList
 
-        # 起点小说的最新章节名
-        tempdict['最新章节'] = tempdict['小说目录'][-1]['章节名']
+            # 起点小说的最新章节名
+            tempdict['最新章节'] = tempdict['小说目录'][-1]['章节名']
 
 
-        '''
-        正文采集，可以根据需求进行拓展
-        '''
-        # 笔趣阁1
-        url1 = 'https://www.biquge.com.cn/search.php?keyword=%s' % (tempdict['书名'])
-        request1 = scrapy.Request(url1, callback=self.content_handler_1, meta={"item": tempdict})
+            '''
+            正文采集，可以根据需求进行拓展
+            '''
+            # 笔趣阁1
+            url1 = 'https://www.biquge.com.cn/search.php?keyword=%s' % (tempdict['书名'])
+            request1 = scrapy.Request(url1, callback=self.content_handler_1, meta={"item": tempdict})
 
-        # 若发现网站中不存小说或没有最新的小说章节则跳到下一个网站爬取，meta['requests']列表决定网站的顺序
-        # 执行第一个request时，变量名必须一致。例如：想第一个执行request1 则 "request1.meta['requests']" 必须与 "return request1" ，“request1”其中一致。
-        request1.meta['requests'] = [
-            # request2,
-            # request3,
-        ]
-        return request1
+            # 若发现网站中不存小说或没有最新的小说章节则跳到下一个网站爬取，meta['requests']列表决定网站的顺序
+            # 执行第一个request时，变量名必须一致。例如：想第一个执行request1 则 "request1.meta['requests']" 必须与 "return request1" ，“request1”其中一致。
+            request1.meta['requests'] = [
+                # request2,
+                # request3,
+            ]
+            # return request1
 
     def content_handler_1(self, response):
         '''
