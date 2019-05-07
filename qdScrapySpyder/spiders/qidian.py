@@ -5,7 +5,7 @@ import scrapy,re,os.path,json,difflib,datetime,time
 class QidianSpider(scrapy.Spider):
     name = "qidian"
     allowed_domains = ["qidian.com","560xs.com","biquge.com.cn","biqusoso.com","biquge5200.cc","xbiquge6.com","zwdu.com"]
-    start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(1, 5000)]
+    start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(self.breakPoint(), 5000)]
 
     custom_settings = {
         # 'COOKIES_ENABLED':False,
@@ -40,6 +40,8 @@ class QidianSpider(scrapy.Spider):
                     self.set_cookie = str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]
                 yield scrapy.Request(url='https:%s'%i, callback=self.parse_novel_info)
         else:
+            print('%s 请求速度过快，未获取到数据，重试！'%response.url)
+            self.breakPoint(response.url)
             yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True, meta={'dont_retry':True})
 
     def parse_novel_info(self, response):
@@ -238,71 +240,27 @@ class QidianSpider(scrapy.Spider):
         item['isD'] = 0  # 是否属于删除状态
         yield item
 
-
-    def qItem(self,tempDict):
-        '''
-        小说基础信息
-        :param tempDict:你懂的
-        :return:
-        '''
-        from qdScrapySpyder.items import QidianItem
-        item = QidianItem()
-        item['bImgBase64'] = tempDict['书封面']  # 封面
-        item['bName'] = tempDict['书名']  # 书名
-        item['bKeys'] = tempDict['总字数']  # 总字数
-        item['bResClick'] = tempDict['总点击数']  # 总点击数
-        item['bClick'] = tempDict['阅文总点击']  # 阅文总点击
-        item['bVIPClick'] = tempDict['会员周点击']  # 会员周点击
-        item['bResRecommend'] = tempDict['总推荐']  # 总推荐
-        item['bWeekRecommend'] = tempDict['周推荐']  # 周推荐
-        item['bWriterName'] = tempDict['作者信息']['姓名']  # 作者UUID
-        item['bAction'] = tempDict['连载状态']  # 连载状态
-        item['bType'] = tempDict['分类']  # 分类
-        item['bIntro'] = tempDict['简介']  # 简介
-        item['bMoreIntro'] = tempDict['介绍']  # 介绍
-        item['bURL'] = tempDict['书源URL']  # 书源URL
-        # item['bIndex'] = tempDict['小说目录']  # 小说目录
-        item['isD'] = 0  # 是否属于删除状态
-        yield item
-
-    def qChapterItem(self, tempDict):
-        '''
-        小说正文
-        :param tempDict:你懂的
-        :return:
-        '''
-        from qdScrapySpyder.items import QidianChapterItem
-        item = QidianChapterItem()
-        item['cOrder'] = tempDict['文章顺序']  # '文章顺序'
-        item['cBook'] = tempDict['所属小说名']  # '所属卷名'
-        item['cTitle'] = tempDict['所属卷名']  # '所属卷名'
-        item['cName'] = tempDict['章节名']  # '章节名'
-        item['fullName'] = '%s-%s-%s'%(tempDict['所属小说名'],tempDict['所属卷名'],tempDict['章节名'])  # '章节全名，建议建立 唯一索引 例如：放开那个女巫_正文卷_第一千四百六十八章 燃点'
-        item['cUT'] = tempDict['更新时间']  # '更新时间'
-        item['cKeys'] = tempDict['字数']  # '字数'
-        item['cContent'] = tempDict['正文']  # '字数'
-        item['isD'] = 0  # 是否属于删除状态
-        yield item
-
-    def qWriterItem(self, tempDict):
-        '''
-        小说作者信息
-        :param tempDict:你懂的
-        :return:
-        '''
-        from qdScrapySpyder.items import QidianWriterItem
-        item = QidianWriterItem()
-        item['wUUID'] = tempDict['作者UUID']  # 作者UUID
-        item['wName'] = tempDict['姓名']  # 姓名
-        item['wItro'] = tempDict['作者简介']  # 作者简介
-        item['wWorks'] = tempDict['作品总数']  # 作品总数
-        item['wWorkKeys'] = tempDict['累计字数']  # 累计字数
-        item['wWorkDays'] = tempDict['创作天数']  # 创作天数
-        item['isD'] = 0  # 是否属于删除状态
-        yield item
-
-
     # 工具函数
+    @classmethod
+    def breakPoint(self,tempStr=None):
+        '''
+        断点继爬，记录起点所有作品页没有获取到数据的页数，方便下次启动时接着爬取
+        :param tempStr: 字符串，记录页数。该值为空时，为检查和读取同目录下的断点文本文件
+        :return:
+        '''
+        if tempStr:
+            with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'breakPoint_%s.txt'%self.name), 'w',encoding='utf-8') as f:
+                f.write(tempStr.split('&page=')[-1])
+        else:
+            if os.path.exists('breakPoint_%s.txt'%self.name):
+                with open('breakPoint_%s.txt'%self.name) as f:
+                    lines = f.readlines()
+                if lines:
+                    return lines[0]
+            else:
+                return 0
+
+
     def fontAnti(self,):
         '''
         todo 字体反爬
@@ -399,4 +357,6 @@ class QidianSpider(scrapy.Spider):
             return ['暂无具体信息...']
 
 if __name__ == '__main__':
-    print(QidianSpider.imgToBase64('https://bookcover.yuewen.com/qdbimg/349573/2571593/180'))
+    # print(QidianSpider.imgToBase64('https://bookcover.yuewen.com/qdbimg/349573/2571593/180'))
+    # print(os.path.join(os.path.abspath(os.path.dirname(__file__)),'breakPoint.txt'))
+    QidianSpider.breakPoint()

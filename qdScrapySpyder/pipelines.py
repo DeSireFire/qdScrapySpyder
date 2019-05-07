@@ -34,13 +34,10 @@ class QidianPipeline(object):
 
     def process_item(self,item,spider):
         if 'bName' in dict(item).keys():
-            print('是小说基础表')
             self.mysql_insert_update(item, 'QidianItem')
         elif 'wName' in dict(item).keys():
-            print('是小说作者表')
             self.mysql_insert_update(item, 'QidianWriterItem')
         else:
-            print('是小说章节正文表')
             self.mysql_insert_update(item, 'QidianChapterItem')
         return item
 
@@ -62,7 +59,6 @@ class QidianPipeline(object):
         sql += myUpdate
         try:
             if self.cursor.execute(sql, tuple(data.values()) * 2):
-                print("更新成功！")
                 self.db.commit()
         except Exception as e:
             print("更新数据 时发生错误:%s" % e)
