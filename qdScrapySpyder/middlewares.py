@@ -109,41 +109,41 @@ class RandomUserAgentMiddleware(object):
         '''
         request.headers['User-Agent'] = choice(self.user_agents)
 
-    class ProxyMiddleware():
-        def __init__(self, proxy_url):
-            self.logger = logging.getLogger(__name__)
-            self.proxy_url = proxy_url
+class ProxyMiddleware():
+    def __init__(self, proxy_url):
+        self.logger = logging.getLogger(__name__)
+        self.proxy_url = proxy_url
 
-        # todo 中间件有待调整！
-        def get_random_proxy(self):
-            try:
-                response = requests.get(self.proxy_url)  # 获取代理池IP
-                if response.status_code == 200 and 'no' not in response.text:
-                    return response.text
-            except requests.ConnectionError:
-                return False
+    # todo 中间件有待调整！
+    def get_random_proxy(self):
+        try:
+            response = requests.get(self.proxy_url)  # 获取代理池IP
+            if response.status_code == 200 and 'no' not in response.text:
+                return response.text
+        except requests.ConnectionError:
+            return False
 
-        # 强制使用代理
-        def process_request(self, request, spider):
+    # 强制使用代理
+    # def process_request(self, request, spider):
+    #     proxy = self.get_random_proxy()
+    #     if proxy:
+    #         url = 'https://{proxy}'.format(proxy=proxy)
+    #         self.logger.debug('使用代理 %s'%proxy)
+    #         request.meta['proxy'] = url
+
+    # 重试时使用代理
+    def process_request(self, request, spider):
+        if request.meta.get('retry_times'):
             proxy = self.get_random_proxy()
             if proxy:
                 url = 'https://{proxy}'.format(proxy=proxy)
-                self.logger.debug('使用代理 %s'%proxy)
+                print(url)
+                self.logger.debug('使用代理 %s' % proxy)
                 request.meta['proxy'] = url
 
-        # 重试时使用代理
-        # def process_request(self, request, spider):
-        #     if request.meta.get('retry_times'):
-        #         proxy = self.get_random_proxy()
-        #         if proxy:
-        #             url = 'https://{proxy}'.format(proxy=proxy)
-        #             print(url)
-        #             self.logger.debug('使用代理 %s' % proxy)
-        #             request.meta['proxy'] = url
-
-        @classmethod
-        def from_crawler(cls, crawler):
-            settings = crawler.settings
-            return cls(
-                proxy_url=settings.get('PROXY_URL')
-            )
+    @classmethod
+    def from_crawler(cls, crawler):
+        settings = crawler.settings
+        return cls(
+            proxy_url=settings.get('PROXY_URL')
+        )

@@ -5,7 +5,7 @@ import scrapy,re,os.path,json,difflib,datetime,time
 class QidianSpider(scrapy.Spider):
     name = "qidian"
     allowed_domains = ["qidian.com","560xs.com","biquge.com.cn","biqusoso.com","biquge5200.cc","xbiquge6.com","zwdu.com"]
-    start_urls = ['https://www.qidian.com/all?page=1']
+    start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(1, 20)]
 
     custom_settings = {
         # 'COOKIES_ENABLED':False,
@@ -32,39 +32,15 @@ class QidianSpider(scrapy.Spider):
     book_nextPage = '<li class="lbf-pagination-item"><a href="([\s\S]*?)" class="lbf-pagination-next ">&gt;</a>'
     set_cookie = ''
 
-    # def start_requests(self):
-    #     # for page in range(1,2):
-    #     for page in range(1,20):
-    #         print("开始获取第%s页的小说"%page)
-    #         visited_url='https://www.qidian.com/all?orderId=&style=1&pageSize=20&siteid=1&pubflag=0&hiddenField=0&page=%s'%page
-    #         yield scrapy.Request(url=visited_url,callback=self.parse)
-
     def parse(self, response):
         urls = response.xpath("/html/body/div[@class='wrap']/div[@class='all-pro-wrap box-center cf']/div[@class='main-content-wrap fl']/div[@class='all-book-list']/div[@class='book-img-text']/ul[@class='all-img-list cf']/li/div[@class='book-img-box']/a/@href").extract()
         if urls:
             for i in urls:
                 if response.headers.getlist("Set-Cookie"):
                     self.set_cookie = str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]
-                # yield scrapy.Request(url='https:%s'%i, callback=self.parse_novel_info)
+                yield scrapy.Request(url='https:%s'%i, callback=self.parse_novel_info)
         else:
-            yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True)
-
-        next_page = self.reglux(response.text,self.book_nextPage,False)[0].split('<li class="lbf-pagination-item"><a href="')[-1]
-        print(next_page)
-
-        if '暂无具体信息' not in next_page:
-            if int(next_page.split('page=')[-1])< 50:
-                yield scrapy.Request(url='https:%s'%next_page, callback=self.parse)
-        else:
-            yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True)
-
-    def non_stop_function(self, response):
-        print('到我这里')
-        print(self.set_cookie)
-        # from twisted.internet import reactor, defer
-        # d = defer.Deferred()
-        # reactor.callLater(10.0, d.callback, scrapy.Request(url='https://book.qidian.com/info/%s'%i[-2], callback=self.parse_novel_info,meta={'csrf':str(response.headers.getlist("Set-Cookie")[0],encoding = "utf-8").split(';')[0]}))
-
+            yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True, meta={'dont_retry':True})
 
     def parse_novel_info(self, response):
         print('到详细页')
@@ -94,6 +70,10 @@ class QidianSpider(scrapy.Spider):
             '书源URL':response.url,
             '小说目录':{},
         }
+        # indextext = response.xpath(".//body//div//div[@class='volume-wrap']/div//li/a/text()").extract()
+        # if not indextext:
+        #     indextext = response.xpath("//body/div[@class='wrap']/div[@class='book-detail-wrap center990']/div[@id='j-catalogWrap']/div[@class='volume-wrap']/div[@class='volume']/ul[@class='cf']/li/a/text()").extract()
+        # print(indextext)
 
         index_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = BI_resdict['书id'])
         yield scrapy.Request(url=index_url, callback=self.ajax_index, meta={"item": BI_resdict})
@@ -105,6 +85,7 @@ class QidianSpider(scrapy.Spider):
         if 'data' not in datas:
             print(response.url)
             print(datas)
+            yield scrapy.Request(url=response.url, callback=self.ajax_index, meta={"item": tempdict,'dont_retry':True,}, dont_filter=True)
         else:
             indexList = []
             for i in list(datas['data']['vs']):

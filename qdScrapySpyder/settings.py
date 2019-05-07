@@ -27,7 +27,7 @@ CONCURRENT_REQUESTS = 16
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 10
+# DOWNLOAD_DELAY = 2
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -62,7 +62,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware': 350,
     # 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 400,
     # 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 500,
-    # 'scrapy.downloadermiddlewares.retry.RetryMiddleware': 550,
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': 550,
     # 'scrapy.downloadermiddlewares.ajaxcrawl.AjaxCrawlMiddleware': 560,
     # 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware': 580,
     # 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 590,
@@ -72,7 +72,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'scrapy.downloadermiddlewares.stats.DownloaderStats': 850,
     # 'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware': 900,
     'qdScrapySpyder.middlewares.RandomUserAgentMiddleware': 554,
-    # 'qidian.middlewares.ProxyMiddleware': 555,
+    'qdScrapySpyder.middlewares.ProxyMiddleware': 555,
 }
 
 # Enable or disable extensions
@@ -114,12 +114,13 @@ HTTPERROR_ALLOWED_CODES = [400]
 MYSQL_HOST = '45.77.254.61' # 数据库地址
 MYSQL_DATABASE = 'qidianTest' # 数据库名
 MYSQL_USER = 'qidianTest'
-MYSQL_PASSWORD = '8cSJAKZY4PkLJMyX'
+MYSQL_PASSWORD = ''
 MYSQL_PORT = 3306
 
 # 代理设置
-PROXY_URL = 'test'
+PROXY_URL = ''
 
-# 重试次数
-RETRY_TIMES = 3
-
+# 重试控制
+RETRY_ENABLED = True
+RETRY_TIMES = 5
+RETRY_HTTP_CODES = [500, 503, 504, 400, 408,403]
