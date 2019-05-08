@@ -5,7 +5,7 @@ import scrapy,re,os.path,json,difflib,datetime,time
 class QidianSpider(scrapy.Spider):
     name = "qidian"
     allowed_domains = ["qidian.com","560xs.com","biquge.com.cn","biqusoso.com","biquge5200.cc","xbiquge6.com","zwdu.com"]
-    start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(self.breakPoint(), 5000)]
+    start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(0, 5000)]
 
     custom_settings = {
         # 'COOKIES_ENABLED':False,
@@ -213,6 +213,15 @@ class QidianSpider(scrapy.Spider):
                         yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
         else:
             for url, info in zip(urlList, response.meta['item']['小说目录']):
+                info = {
+                    '文章顺序': urlList.index(url) + 1,
+                    '所属小说名': response.meta['item']['书名'],
+                    '所属卷名': '正文卷',
+                    '章节名': info['章节名'],
+                    '更新时间': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    '字数': 0,
+                    '正文': '',
+                }
                 yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
 
 
@@ -250,15 +259,14 @@ class QidianSpider(scrapy.Spider):
         '''
         if tempStr:
             with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'breakPoint_%s.txt'%self.name), 'w',encoding='utf-8') as f:
-                f.write(tempStr.split('&page=')[-1])
+                f.write(tempStr.split('page=')[-1])
         else:
             if os.path.exists('breakPoint_%s.txt'%self.name):
                 with open('breakPoint_%s.txt'%self.name) as f:
                     lines = f.readlines()
                 if lines:
-                    return lines[0]
-            else:
-                return 0
+                    print('上次爬取到 %s 所有作品页'%lines[0])
+                    self.start_urls =['https://www.qidian.com/all?page=%s'%str(page) for page in range(lines[0], 5000)]
 
 
     def fontAnti(self,):
