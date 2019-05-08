@@ -80,7 +80,9 @@ class QidianSpider(scrapy.Spider):
         if 'data' not in datas:
             print(response.url)
             print(datas)
-            yield scrapy.Request(url=response.url, callback=self.ajax_index, meta={"item": tempdict,'dont_retry':True,}, dont_filter=True)
+            # 更新csrf
+            n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = response.url.split('bookId=')[-1])
+            yield scrapy.Request(url=n_url, callback=self.ajax_index, meta={"item": tempdict,'dont_retry':True,}, dont_filter=True)
         else:
             indexList = []
             for i in list(datas['data']['vs']):
@@ -251,6 +253,50 @@ class QidianSpider(scrapy.Spider):
 
     # 工具函数
     @classmethod
+    def proxy_list(self, url, testURL='https://www.qidian.com/all'):
+        """
+        获取并检测代理池返回的IP
+        :param url: 获取IP的代理池地址
+        :param testURL: 检测网址
+        :return: 一个能用的ip组成的proxies字典
+        """
+        import requests
+        count = 0  # 获取的IP数
+        try:
+            while count != 0:
+                proxy = requests.get(url)
+                for i in range(0, 4):
+                    proxies = {
+                        'http': 'http://%s' % (proxy),
+                        'https': 'https://%s' % (proxy)
+                    }
+                    r = requests.get(testURL, proxies=proxies)
+                    if (not r.ok) or len(r.content) < 500:
+                        r = requests.get("http://45.77.254.61:5010/delete?proxy=%s" %proxy)
+                    else:
+                        return proxies
+
+        except Exception as e:
+            # print(e)
+            return None
+
+    @classmethod
+    def csrfGet(self):
+        '''
+        获取起点的csrf,并测试代理池IP有效性
+        :return:字符串。“_csrfToken=xHkfvgku5YqNQE3nBMNlBvO2KZk1i6HhSDit0iTq”
+        '''
+        import requests
+        from qdScrapySpyder.settings import PROXY_URL
+        headers = {
+            'Host':'www.qidian.com',
+            'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'
+        }
+        req = requests.get(url='https://www.qidian.com/all',headers=headers, proxies=self.proxy_list(PROXY_URL))
+        return req.headers['set-cookie'].split(';')[0]
+
+
+    @classmethod
     def breakPoint(self,tempStr=None):
         '''
         断点继爬，记录起点所有作品页没有获取到数据的页数，方便下次启动时接着爬取
@@ -266,17 +312,7 @@ class QidianSpider(scrapy.Spider):
                     lines = f.readlines()
                 if lines:
                     print('上次爬取到 %s 所有作品页'%lines[0])
-                    self.start_urls =['https://www.qidian.com/all?page=%s'%str(page) for page in range(lines[0], 5000)]
-
-
-    def fontAnti(self,):
-        '''
-        todo 字体反爬
-        :return:
-        '''
-        # from fontTools.ttLib import TTFont
-        # 没戏没戏
-        pass
+                    self.start_urls =['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(lines[0]), 5000)]
 
     @classmethod
     def imgToBase64(self,imgId):
@@ -367,4 +403,5 @@ class QidianSpider(scrapy.Spider):
 if __name__ == '__main__':
     # print(QidianSpider.imgToBase64('https://bookcover.yuewen.com/qdbimg/349573/2571593/180'))
     # print(os.path.join(os.path.abspath(os.path.dirname(__file__)),'breakPoint.txt'))
-    QidianSpider.breakPoint()
+    # QidianSpider.breakPoint()
+    QidianSpider.csrfGet()

@@ -1,14 +1,14 @@
 #!/bin/sh
 # 调用帮助
-# $ bash ./qd.sh --help
-# 在screen中打开ip代理池终端
-# $ bash ./qd.sh -r
-# 结束现有开启的ip代理池终端
-# $ bash ./qd.sh -kf
-# 查看ip代理池运行状态
-# $ bash ./qd.sh -s
-# 将后台的ip代理池screen调至前台
-# $ bash ./qd.sh -f
+# $ bash ./qidian.sh --help
+# 在screen中打开起点爬虫
+# $ bash ./qidian.sh -r
+# 结束现有开启的起点爬虫终端
+# $ bash ./qidian.sh -kf
+# 查看起点爬虫运行状态
+# $ bash ./qidian.sh -s
+# 将后台的起点爬虫screen调至前台
+# $ bash ./qidian.sh -f
 if [ "$1" == --help ];then
     printf " ==========================================\n"
     printf " -r\t基于screen的一键运行脚本,使用前，确保已经安装screen\n"
