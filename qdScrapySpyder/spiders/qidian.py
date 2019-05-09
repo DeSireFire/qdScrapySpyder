@@ -5,7 +5,8 @@ import scrapy,re,os.path,json,difflib,datetime,time
 class QidianSpider(scrapy.Spider):
     name = "qidian"
     allowed_domains = ["qidian.com","560xs.com","biquge.com.cn","biqusoso.com","biquge5200.cc","xbiquge6.com","zwdu.com"]
-    start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(0, 5000)]
+    start_urls = []
+    # start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(0, 5000)]
 
     custom_settings = {
         # 'COOKIES_ENABLED':False,
@@ -31,6 +32,21 @@ class QidianSpider(scrapy.Spider):
 
     book_img_X = "//body//div//div[@class='book-img']/a[@id='bookImg']/img/@src"
     set_cookie = ''
+
+    # def start_requests(self):
+    #     pages = self.breakPoint()
+    #     print(pages)
+    #     for page in pages:
+    #         yield scrapy.Request(url=page, callback=self.parse)
+
+    def start_requests(self):
+        for page in range(1,2):
+        # for page in range(1,5010):
+            print("开始获取第%s页的小说"%page)
+            visited_url='https://www.qidian.com/all?orderId=&style=1&pageSize=20&siteid=1&pubflag=0&hiddenField=0&page=%s'%page
+            yield scrapy.Request(url=visited_url,callback=self.parse)
+            # 起点全部小说也爬取完，改成只爬取最新章节
+            # self.custom_settings['updateBool'] = True
 
     def parse(self, response):
         urls = response.xpath("/html/body/div[@class='wrap']/div[@class='all-pro-wrap box-center cf']/div[@class='main-content-wrap fl']/div[@class='all-book-list']/div[@class='book-img-text']/ul[@class='all-img-list cf']/li/div[@class='book-img-box']/a/@href").extract()
@@ -300,19 +316,46 @@ class QidianSpider(scrapy.Spider):
     def breakPoint(self,tempStr=None):
         '''
         断点继爬，记录起点所有作品页没有获取到数据的页数，方便下次启动时接着爬取
-        :param tempStr: 字符串，记录页数。该值为空时，为检查和读取同目录下的断点文本文件
+        :param tempStr: 字典，记录各项爬取数据
         :return:
         '''
-        if tempStr:
-            with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'breakPoint_%s.txt'%self.name), 'w',encoding='utf-8') as f:
-                f.write(tempStr.split('page=')[-1])
+        tempJson = {
+            'page':0,       # 用于记录上次爬取到的所有作品页
+            'pages':[],     # 用于记录哪些所有作品页请求失败
+            'bookName':[],  # 用于记录有哪些小说笔趣阁未收录
+        }
+        # 断点记录不存在则创建文本并写入
+        if not os.path.exists('breakPoint_%s.json' % self.name):
+            with open('breakPoint_%s.json' % self.name) as f:
+                f.write(json.dumps(tempJson))
         else:
-            if os.path.exists('breakPoint_%s.txt'%self.name):
-                with open('breakPoint_%s.txt'%self.name) as f:
-                    lines = f.readlines()
-                if lines:
-                    print('上次爬取到 %s 所有作品页'%lines[0])
-                    self.start_urls =['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(lines[0]), 5000)]
+            # 读取到文件中存在数据
+            with open('breakPoint_%s.json' % self.name) as f:
+                lines = json.loads(f.readlines())
+
+            if 'page' not in lines.keys:
+                with open('breakPoint_%s.json' % self.name) as f:
+                    f.write(json.dumps(tempJson))
+            else:
+                # 有参数时，更新字典
+                if tempStr:
+                    if 'page' in tempStr.keys() and int(tempStr['page'])>int(lines['page']):
+                        tempJson['page'] = tempStr['page']
+                    else:
+                        del tempStr['page']
+                    tempJson.update(tempStr)
+                    # 去重
+                    tempJson['pages'] = list(set(tempJson['pages']))
+                    tempJson['bookName'] = list(set(tempJson['bookName']))
+                    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'breakPoint_%s.json'%self.name), 'w',encoding='utf-8') as f:
+                        # f.write(tempStr.split('page=')[-1])
+                        f.write(json.dumps(tempJson))
+                else:
+                    if lines['pages']:
+                        print('上次爬取到 %s 所有作品页'%lines['page'])
+                        return [['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(lines['page']), 5000)].append(i) for i in lines['pages'] if not i in self.start_urls]
+                    else:
+                        return ['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(lines['page']), 5000)]
 
     @classmethod
     def imgToBase64(self,imgId):
@@ -327,7 +370,7 @@ class QidianSpider(scrapy.Spider):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
         }
         # print("封面地址：https://bookcover.yuewen.com/qdbimg/349573/%s/180"%imgId)
-        req = requests.get(url=imgId.replace('%0D',''), headers=myheader)
+        req = requests.get(url=imgId, headers=myheader)
         base64_data = base64.b64encode(req.content)
         return 'data:image/jpg;base64,' + bytes.decode(base64_data)
 
@@ -403,5 +446,5 @@ class QidianSpider(scrapy.Spider):
 if __name__ == '__main__':
     # print(QidianSpider.imgToBase64('https://bookcover.yuewen.com/qdbimg/349573/2571593/180'))
     # print(os.path.join(os.path.abspath(os.path.dirname(__file__)),'breakPoint.txt'))
-    # QidianSpider.breakPoint()
-    QidianSpider.csrfGet()
+    QidianSpider.breakPoint()
+    # QidianSpider.csrfGet()
