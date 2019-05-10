@@ -62,3 +62,6 @@ class QidianPipeline(object):
                 self.db.commit()
         except Exception as e:
             print("更新数据 时发生错误:%s" % e)
+
+if __name__ == '__main__':
+    QidianPipeline.mysql_insert_update

@@ -5,7 +5,7 @@ import scrapy,re,os.path,json,difflib,datetime,time
 class QidianSpider(scrapy.Spider):
     name = "qidian"
     allowed_domains = ["qidian.com","560xs.com","biquge.com.cn","biqusoso.com","biquge5200.cc","xbiquge6.com","zwdu.com"]
-    start_urls = []
+    start_urls = ['https://www.qidian.com/all']
     # start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(0, 5000)]
 
     custom_settings = {
@@ -32,6 +32,7 @@ class QidianSpider(scrapy.Spider):
 
     book_img_X = "//body//div//div[@class='book-img']/a[@id='bookImg']/img/@src"
     set_cookie = ''
+    ignore_book = []    # 忽略爬取的小说列表
 
     # def start_requests(self):
     #     pages = self.breakPoint()
@@ -40,11 +41,20 @@ class QidianSpider(scrapy.Spider):
     #         yield scrapy.Request(url=page, callback=self.parse)
 
     def start_requests(self):
-        for page in range(1,2):
-        # for page in range(1,5010):
-            print("开始获取第%s页的小说"%page)
-            visited_url='https://www.qidian.com/all?orderId=&style=1&pageSize=20&siteid=1&pubflag=0&hiddenField=0&page=%s'%page
-            yield scrapy.Request(url=visited_url,callback=self.parse)
+        oldData = self.breakPoint()
+        self.ignore_book += list(set(oldData['pages']))
+        if oldData['pages']:
+            print('上次爬取到 %s 所有作品页' % oldData['page'])
+            urls = [['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(oldData['page']), 5000)].append(i) for i in oldData['pages'] if not i in self.start_urls]
+        else:
+            urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(oldData['page']), 5000)]
+        print(urls)
+        print(self.ignore_book)
+        # for page in range(1,2):
+        # for page in self.start_urls:
+        #     # print("开始获取第%s页的小说"%page)
+        #     # visited_url='https://www.qidian.com/all?orderId=&style=1&pageSize=20&siteid=1&pubflag=0&hiddenField=0&page=%s'%page
+        #     yield scrapy.Request(url=page,callback=self.parse)
             # 起点全部小说也爬取完，改成只爬取最新章节
             # self.custom_settings['updateBool'] = True
 
@@ -324,21 +334,21 @@ class QidianSpider(scrapy.Spider):
             'pages':[],     # 用于记录哪些所有作品页请求失败
             'bookName':[],  # 用于记录有哪些小说笔趣阁未收录
         }
+        _path = os.path.join(os.path.abspath(os.path.dirname(__file__)),'breakPoint_%s.json' % self.name)
         # 断点记录不存在则创建文本并写入
-        if not os.path.exists('breakPoint_%s.json' % self.name):
-            with open('breakPoint_%s.json' % self.name) as f:
+        if not os.path.exists(_path):
+            with open(_path, 'w',encoding='utf-8') as f:
                 f.write(json.dumps(tempJson))
+            return tempJson
         else:
             # 读取到文件中存在数据
-            with open('breakPoint_%s.json' % self.name) as f:
-                lines = json.loads(f.readlines())
-
-            if 'page' not in lines.keys:
-                with open('breakPoint_%s.json' % self.name) as f:
-                    f.write(json.dumps(tempJson))
-            else:
+            print(_path)
+            with open(_path, 'w',encoding='utf-8') as f:
+                lines = f.readlines()
+            if lines:
+                lines = json.loads(lines)
                 # 有参数时，更新字典
-                if tempStr:
+                if tempStr != None:
                     if 'page' in tempStr.keys() and int(tempStr['page'])>int(lines['page']):
                         tempJson['page'] = tempStr['page']
                     else:
@@ -347,15 +357,11 @@ class QidianSpider(scrapy.Spider):
                     # 去重
                     tempJson['pages'] = list(set(tempJson['pages']))
                     tempJson['bookName'] = list(set(tempJson['bookName']))
-                    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'breakPoint_%s.json'%self.name), 'w',encoding='utf-8') as f:
+                    with open(_path, 'w',encoding='utf-8') as f:
                         # f.write(tempStr.split('page=')[-1])
                         f.write(json.dumps(tempJson))
                 else:
-                    if lines['pages']:
-                        print('上次爬取到 %s 所有作品页'%lines['page'])
-                        return [['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(lines['page']), 5000)].append(i) for i in lines['pages'] if not i in self.start_urls]
-                    else:
-                        return ['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(lines['page']), 5000)]
+                    return lines
 
     @classmethod
     def imgToBase64(self,imgId):
