@@ -32,16 +32,9 @@ class QidianSpider(scrapy.Spider):
 
     book_img_X = "//body//div//div[@class='book-img']/a[@id='bookImg']/img/@src"
     set_cookie = ''
-    # ignore_book = []    # 忽略爬取的小说列表
 
     def start_requests(self):
-        oldData = self.breakPoint()
-        # self.ignore_book += oldData['pages']
-        if oldData['pages']:
-            print('上次爬取到 %s 所有作品页' % oldData['page'])
-            urls = [['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(oldData['page']), 5000)].append(i) for i in oldData['pages'] if not i in self.start_urls]
-        else:
-            urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(int(oldData['page']), 5000)]
+        urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(1, 5000)]
         for page in urls:
             print("开始获取第%s页的小说"%page)
             yield scrapy.Request(url=page,callback=self.parse)
@@ -60,7 +53,6 @@ class QidianSpider(scrapy.Spider):
                 'pages': [response.url],  # 用于记录哪些所有作品页请求失败
                 'bookName': [],  # 用于记录有哪些小说笔趣阁未收录
             }
-            self.breakPoint(tempJson)
             yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True, meta={'dont_retry':True})
 
     def parse_novel_info(self, response):
@@ -313,60 +305,6 @@ class QidianSpider(scrapy.Spider):
         }
         req = requests.get(url='https://www.qidian.com/all',headers=headers, proxies=self.proxy_list(PROXY_URL))
         return req.headers['set-cookie'].split(';')[0]
-
-
-    @classmethod
-    def breakPoint(self,tempStr=None):
-        '''
-        断点继爬，记录起点所有作品页没有获取到数据的页数，方便下次启动时接着爬取
-        :param tempStr: 字典，记录各项爬取数据
-        :return:
-        '''
-        tempJson = {
-            'page':1,       # 用于记录上次爬取到的所有作品页
-            'pages':[],     # 用于记录哪些所有作品页请求失败
-            'bookName':[],  # 用于记录有哪些小说笔趣阁未收录
-        }
-        _path = os.path.join(os.path.abspath(os.path.dirname(__file__)),'breakPoint_%s.json' % self.name)
-        # 断点记录不存在则创建文本并写入
-        if os.path.exists(_path):
-            if os.path.getsize(_path) >= 40:
-                # 读取到文件中存在数据
-                try:
-                    with open(_path, 'r',encoding='utf-8') as f:
-                        lines = f.read()
-                        lines = json.loads(lines)
-                        # 有参数时，更新字典
-                        if tempStr != None:
-                            if int(lines['page']) >= int(tempStr['page']):
-                                tempStr['page'] = lines['page']
-                            tempJson['page'] = tempStr['page']
-                            tempJson['pages'] += tempStr['pages']
-                            tempJson['bookName'] += tempStr['bookName']
-                            # 去重
-                            tempJson['pages'] = list(set(tempJson['pages']))
-                            tempJson['bookName'] = list(set(tempJson['bookName']))
-                            with open(_path, 'w',encoding='utf-8') as f:
-                                f.write(json.dumps(tempJson))
-                            return tempJson
-                        else:
-                            return lines
-                except Exception as e:
-                    print(e)
-                    with open(_path, 'w', encoding='utf-8') as f:
-                        f.write(json.dumps(tempJson))
-                    return tempJson
-            else:
-                with open(_path, 'w', encoding='utf-8') as f:
-                    f.write(json.dumps(tempJson))
-                return tempJson
-        else:
-            with open(_path, 'w',encoding='utf-8') as f:
-                f.write(json.dumps(tempJson))
-            return tempJson
-        #     if lines:
-        #         lines = json.loads(lines)
-
 
     @classmethod
     def imgToBase64(self,imgId):
