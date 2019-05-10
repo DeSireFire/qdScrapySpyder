@@ -291,6 +291,8 @@ class QidianSpider(scrapy.Spider):
             # print(e)
             return None
 
+
+
     @classmethod
     def csrfGet(self):
         '''
