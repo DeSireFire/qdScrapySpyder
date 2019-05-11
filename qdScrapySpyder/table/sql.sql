@@ -1,0 +1,51 @@
+
+DROP TABLE IF EXISTS `qidian_index`;
+CREATE TABLE IF NOT EXISTS `qidian_index` (
+	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NULL COMMENT 'code编码',
+	`category` VARCHAR(255) NULL DEFAULT NULL COMMENT '分类',
+	`sub_category` VARCHAR(255) NULL DEFAULT NULL COMMENT '子分类',
+	`author` VARCHAR(255) NULL DEFAULT NULL COMMENT '作者',
+	`intro` VARCHAR(255) NULL DEFAULT NULL COMMENT '简介',
+	`info` VARCHAR(255) NULL DEFAULT NULL COMMENT '信息',
+	`score` VARCHAR(255) NULL DEFAULT NULL COMMENT '分数',
+	`cover_url` VARCHAR(255) NULL DEFAULT NULL COMMENT '图片url',
+	`uptime` VARCHAR(255) NULL DEFAULT NULL COMMENT '更新时间',
+	`count_chapter` INT(10) NULL DEFAULT NULL COMMENT '总章节',
+	`tags` VARCHAR(255) NULL DEFAULT NULL COMMENT '标签',
+	`new_chapter` VARCHAR(255) NULL DEFAULT NULL COMMENT '最新章节',
+	`new_uptime` VARCHAR(255) NULL DEFAULT NULL COMMENT '更新时间',
+	`size_num` INT(11) NULL DEFAULT '0' COMMENT '总字数',
+	`click_num` INT(11) NULL DEFAULT '0' COMMENT '点击次数',
+	`week_click_num` INT(11) NULL DEFAULT '0' COMMENT '周点击次数',
+	`recommend_num` INT(11) NULL DEFAULT '0' COMMENT '推荐数',
+	`week_recommend_num` INT NULL DEFAULT '0' COMMENT '周推荐',
+	`status` INT(11) NOT NULL DEFAULT '0' COMMENT '状态:0连载,1完结',
+	`chapter_status` INT(11) NULL DEFAULT '0' COMMENT '章节状态',
+	`qidian_url` VARCHAR(255) NULL DEFAULT NULL COMMENT '起点url',
+	`relation_biquge` VARCHAR(255) NULL DEFAULT NULL COMMENT '笔趣阁url',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `qidian_cover`;
+CREATE TABLE IF NOT EXISTS `qidian_cover` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`type` VARCHAR(255) NOT NULL COMMENT '数据类型',
+	`img` TEXT NOT NULL COMMENT '图片base64',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_0`;
+CREATE TABLE IF NOT EXISTS  `content_0` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
