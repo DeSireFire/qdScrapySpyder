@@ -13,9 +13,10 @@ import scrapy
 '''
 class qidian_index(scrapy.Item):
     '''
-    表名：QidianItem
+    表名：qidian_index
     变量名对应数据库字段名
     '''
+    code = scrapy.Field()    # url>md5
     name = scrapy.Field()    # 书名
     category = scrapy.Field()    # 类别
     sub_category = scrapy.Field()    # 子类别
@@ -23,10 +24,8 @@ class qidian_index(scrapy.Item):
     intro = scrapy.Field()    # 简介
     info = scrapy.Field()    # 介绍
     score = scrapy.Field()    # 评分
-    img = scrapy.Field()    # 图片
     cover_url = scrapy.Field()    # 图片url
     uptime = scrapy.Field()    # 上传时间
-    code = scrapy.Field()    # url>md5
     count_chapter = scrapy.Field()    # 章节数
     tags = scrapy.Field()    # 标签
     new_chapter = scrapy.Field()    # 最新章节
@@ -37,29 +36,26 @@ class qidian_index(scrapy.Item):
     recommend_num = scrapy.Field()    # 推荐数
     week_recommend_num = scrapy.Field()    # 周推荐数
     status = scrapy.Field()    # 连载状态，连载中的小说为1，完本为0
-    qidian_url = scrapy.Field()    # 封面
-    relation_81zw = scrapy.Field()    # 笔趣阁url
+    chapter_status = scrapy.Field()    # 连载状态，连载中的小说为1，完本为0
+    qidian_url = scrapy.Field()    # 起点url
+    relation_biquge = scrapy.Field()    # 笔趣阁url
 
 class content_0(scrapy.Item):
     '''
-    表名：QidianChapterItem
+    表名：content_[0-9 a-z]
     变量名对应数据库字段名
     '''
-    cOrder = scrapy.Field()  # '所属小说顺序'
-    cBook = scrapy.Field()  # '所属小说名'
-    cTitle = scrapy.Field()  # '所属卷名'
-    cName = scrapy.Field()  # '章节名'
-    fullName = scrapy.Field() # '章节全名，建议建立 唯一索引 例如：放开那个女巫_正文卷_第一千四百六十八章 燃点'
-    cUT = scrapy.Field()  # '更新时间'
-    cKeys = scrapy.Field()  # '字数'
-    cContent = scrapy.Field()  # '字数'
+    code = scrapy.Field()  # 'code编码'
+    rand = scrapy.Field()  # '章节排序编号'
+    title = scrapy.Field()  # '章节标题'
+    content = scrapy.Field()  # '章节内容'
+    remote = scrapy.Field() # '章节备注'
 
 class qidian_cover(scrapy.Item):
     '''
-    表名：QidianWriterItem
+    表名：qidian_cover
     变量名对应数据库字段名
     '''
-    img = scrapy.Field()  # 作者UUID
-    type = scrapy.Field()  # 姓名
-    code = scrapy.Field()  # 作者简介
-    url = scrapy.Field() # 作品总数
+    code = scrapy.Field()  # code编码
+    type = scrapy.Field()  # 数据类型
+    img = scrapy.Field()  # 图片base64

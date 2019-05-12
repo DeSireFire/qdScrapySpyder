@@ -169,37 +169,37 @@ class QidianSpider(scrapy.Spider):
         nameList = response.xpath(response.meta['xpath'][0][0]+'text()').extract()[response.meta['xpath'][0][1]:response.meta['xpath'][0][2]]
 
         # 小说基础信息表管道
-        from qdScrapySpyder.items import QidianItem
-        item = QidianItem()
-        item['bImgBase64'] = response.meta['item']['书封面']  # 封面
-        item['bName'] = response.meta['item']['书名']  # 书名
-        item['bKeys'] = response.meta['item']['总字数']  # 总字数
-        item['bResClick'] = response.meta['item']['总点击数']  # 总点击数
-        item['bClick'] = response.meta['item']['阅文总点击']  # 阅文总点击
-        item['bVIPClick'] = response.meta['item']['会员周点击']  # 会员周点击
-        item['bResRecommend'] = response.meta['item']['总推荐']  # 总推荐
-        item['bWeekRecommend'] = response.meta['item']['周推荐']  # 周推荐
-        item['bWriterName'] = response.meta['item']['作者信息']['作者UUID']  # 作者UUID
-        item['bAction'] = response.meta['item']['连载状态']  # 连载状态
-        item['bType'] = response.meta['item']['分类']  # 分类
-        item['bIntro'] = response.meta['item']['简介']  # 简介
-        item['bMoreIntro'] = response.meta['item']['介绍']  # 介绍
-        item['bURL'] = response.meta['item']['书源URL']  # 书源URL
-        # item['bIndex'] = tempDict['小说目录']  # 小说目录
-        item['isD'] = 0  # 是否属于删除状态
-        yield item
+        from qdScrapySpyder.items import qidian_index
+        # item = QidianItem()
+        # item['bImgBase64'] = response.meta['item']['书封面']  # 封面
+        # item['bName'] = response.meta['item']['书名']  # 书名
+        # item['bKeys'] = response.meta['item']['总字数']  # 总字数
+        # item['bResClick'] = response.meta['item']['总点击数']  # 总点击数
+        # item['bClick'] = response.meta['item']['阅文总点击']  # 阅文总点击
+        # item['bVIPClick'] = response.meta['item']['会员周点击']  # 会员周点击
+        # item['bResRecommend'] = response.meta['item']['总推荐']  # 总推荐
+        # item['bWeekRecommend'] = response.meta['item']['周推荐']  # 周推荐
+        # item['bWriterName'] = response.meta['item']['作者信息']['作者UUID']  # 作者UUID
+        # item['bAction'] = response.meta['item']['连载状态']  # 连载状态
+        # item['bType'] = response.meta['item']['分类']  # 分类
+        # item['bIntro'] = response.meta['item']['简介']  # 简介
+        # item['bMoreIntro'] = response.meta['item']['介绍']  # 介绍
+        # item['bURL'] = response.meta['item']['书源URL']  # 书源URL
+        # # item['bIndex'] = tempDict['小说目录']  # 小说目录
+        # item['isD'] = 0  # 是否属于删除状态
+        # yield item
 
         # 作者信息表管道
-        from qdScrapySpyder.items import QidianWriterItem
-        item = QidianWriterItem()
-        item['wUUID'] = response.meta['item']['作者信息']['作者UUID']  # 作者UUID
-        item['wName'] = response.meta['item']['作者信息']['姓名']  # 姓名
-        item['wItro'] = response.meta['item']['作者信息']['作者简介']  # 作者简介
-        item['wWorks'] = response.meta['item']['作者信息']['作品总数']  # 作品总数
-        item['wWorkKeys'] = response.meta['item']['作者信息']['累计字数']  # 累计字数
-        item['wWorkDays'] = response.meta['item']['作者信息']['创作天数']  # 创作天数
-        item['isD'] = 0  # 是否属于删除状态
-        yield item
+        from qdScrapySpyder.items import qidian_cover
+        # item = QidianWriterItem()
+        # item['wUUID'] = response.meta['item']['作者信息']['作者UUID']  # 作者UUID
+        # item['wName'] = response.meta['item']['作者信息']['姓名']  # 姓名
+        # item['wItro'] = response.meta['item']['作者信息']['作者简介']  # 作者简介
+        # item['wWorks'] = response.meta['item']['作者信息']['作品总数']  # 作品总数
+        # item['wWorkKeys'] = response.meta['item']['作者信息']['累计字数']  # 累计字数
+        # item['wWorkDays'] = response.meta['item']['作者信息']['创作天数']  # 创作天数
+        # item['isD'] = 0  # 是否属于删除状态
+        # yield item
 
         if len(nameList) != len(response.meta['item']['小说目录']):
                 if response.meta['updateBool']:# 是否只爬取最新的章节
@@ -249,18 +249,18 @@ class QidianSpider(scrapy.Spider):
         response.meta['item']['字数'] = len(self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[0]))
 
         # 小说正文内容管道
-        from qdScrapySpyder.items import QidianChapterItem
-        item = QidianChapterItem()
-        item['cOrder'] = response.meta['item']['文章顺序']  # '文章顺序'
-        item['cBook'] = response.meta['item']['所属小说名']  # '所属卷名'
-        item['cTitle'] = response.meta['item']['所属卷名']  # '所属卷名'
-        item['cName'] = response.meta['item']['章节名']  # '章节名'
-        item['fullName'] = '%s-%s-%s'%(response.meta['item']['所属小说名'],response.meta['item']['所属卷名'],response.meta['item']['章节名'])  # '章节全名，建议建立 唯一索引 例如：放开那个女巫_正文卷_第一千四百六十八章 燃点'
-        item['cUT'] = response.meta['item']['更新时间']  # '更新时间'
-        item['cKeys'] = response.meta['item']['字数']  # '字数'
-        item['cContent'] = response.meta['item']['正文']  # '字数'
-        item['isD'] = 0  # 是否属于删除状态
-        yield item
+        from qdScrapySpyder.items import content_0
+        # item = QidianChapterItem()
+        # item['cOrder'] = response.meta['item']['文章顺序']  # '文章顺序'
+        # item['cBook'] = response.meta['item']['所属小说名']  # '所属卷名'
+        # item['cTitle'] = response.meta['item']['所属卷名']  # '所属卷名'
+        # item['cName'] = response.meta['item']['章节名']  # '章节名'
+        # item['fullName'] = '%s-%s-%s'%(response.meta['item']['所属小说名'],response.meta['item']['所属卷名'],response.meta['item']['章节名'])  # '章节全名，建议建立 唯一索引 例如：放开那个女巫_正文卷_第一千四百六十八章 燃点'
+        # item['cUT'] = response.meta['item']['更新时间']  # '更新时间'
+        # item['cKeys'] = response.meta['item']['字数']  # '字数'
+        # item['cContent'] = response.meta['item']['正文']  # '字数'
+        # item['isD'] = 0  # 是否属于删除状态
+        # yield item
 
     # 工具函数
     @classmethod
