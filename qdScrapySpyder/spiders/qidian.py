@@ -48,18 +48,15 @@ class QidianSpider(scrapy.Spider):
                 yield scrapy.Request(url='https:%s'%i, callback=self.parse_novel_info)
         else:
             print('%s 请求速度过快，未获取到数据，重试！'%response.url)
-            tempJson = {
-                'page': int(response.url.split('page=')[-1]),  # 用于记录上次请求失败的所有作品页最大页码
-                'pages': [response.url],  # 用于记录哪些所有作品页请求失败
-                'bookName': [],  # 用于记录有哪些小说笔趣阁未收录
-            }
             yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True, meta={'dont_retry':True})
 
     def parse_novel_info(self, response):
         BI_resdict = {
             '书id':response.url[29:],
             '书封面':self.imgToBase64('https:%s'%response.xpath(self.book_img_X).extract()[0].strip()),
+            '书封面URL':'https:%s'%response.xpath(self.book_img_X).extract()[0].strip(),
             '书名':self.reglux(response.text, self.book_name_writer, False)[0][0],
+            '评分':self.scoreGet(response.url[29:]),
             '总字数':0,
             '总点击数':'',
             '阅文总点击':'',
@@ -291,13 +288,33 @@ class QidianSpider(scrapy.Spider):
             # print(e)
             return None
 
-
+    @classmethod
+    def scoreGet(self,tempStr):
+        '''
+        小说评分ajax
+        :param tempStr: 字符串，小说的起点ID
+        :return: base64码
+        '''
+        import requests
+        from qdScrapySpyder.settings import PROXY_URL
+        myheader = {
+            'Referer': 'https://book.qidian.com/info/%s'%tempStr,
+            'Host': 'book.qidian.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
+        }
+        # for line in self.csrfGet():  # 按照字符：进行划分读取
+        #     # 其设置为1就会把字符串拆分成2份
+        #     name, value = line.strip().split('=', 1)
+        #     cookies[name] = value  # 为字典cookies添加内容
+        scoreUrl = "https://book.qidian.com/ajax/comment/index?{_csrfToken}&bookId={bookId}&pageSize=15".format(_csrfToken=self.csrfGet()[0],bookId=tempStr)
+        req = requests.get(url=scoreUrl, headers=myheader, proxies=self.proxy_list(PROXY_URL))
+        return req.json()['data']['rate']
 
     @classmethod
     def csrfGet(self):
         '''
         获取起点的csrf,并测试代理池IP有效性
-        :return:字符串。“_csrfToken=xHkfvgku5YqNQE3nBMNlBvO2KZk1i6HhSDit0iTq”
+        :return:字符串。“_csrfToken=ojyuGPBlNRfhXZs0Mhdou7mom079Ya0mFamF6ak8; expires=Tue, 12-May-2020 16:37:49 GMT; path=/; domain=.qidian.com, newstatisticUUID=1557765469_2081508423; expires=Wed, 12-May-2021 16:37:49 GMT; path=/; domain=.qidian.com”
         '''
         import requests
         from qdScrapySpyder.settings import PROXY_URL
@@ -306,7 +323,7 @@ class QidianSpider(scrapy.Spider):
             'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'
         }
         req = requests.get(url='https://www.qidian.com/all',headers=headers, proxies=self.proxy_list(PROXY_URL))
-        return req.headers['set-cookie'].split(';')[0]
+        return req.headers['set-cookie'].split(';')
 
     @classmethod
     def imgToBase64(self,imgId):
@@ -397,5 +414,6 @@ class QidianSpider(scrapy.Spider):
 if __name__ == '__main__':
     # print(QidianSpider.imgToBase64('https://bookcover.yuewen.com/qdbimg/349573/2571593/180'))
     # print(os.path.join(os.path.abspath(os.path.dirname(__file__)),'breakPoint.txt'))
-    print(QidianSpider.breakPoint({'page':15,'pages':[65,787],'bookName':[888,666]}))
+    # print(QidianSpider.breakPoint({'page':15,'pages':[65,787],'bookName':[888,666]}))
     # QidianSpider.csrfGet()
+    QidianSpider.scoreGet('1004608738')
