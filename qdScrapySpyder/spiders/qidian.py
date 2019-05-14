@@ -31,6 +31,7 @@ class QidianSpider(scrapy.Spider):
     book_cha = '<a class="red-btn J-getJumpUrl " href="([\s\S]*?)" id="readBtn" data-eid="qd_G03" data-bid="([\s\S]*?)" data-firstchapterjumpurl="([\s\S]*?)">'
 
     book_img_X = "//body//div//div[@class='book-img']/a[@id='bookImg']/img/@src"
+    book_category_X = "//body//div/div//p[@class='tag']/a[@class='red']"
     set_cookie = ''
 
     def start_requests(self):
@@ -52,6 +53,7 @@ class QidianSpider(scrapy.Spider):
 
     def parse_novel_info(self, response):
         BI_resdict = {
+            '书md5':self.code_md5(response.url),
             '书id':response.url[29:],
             '书封面':self.imgToBase64('https:%s'%response.xpath(self.book_img_X).extract()[0].strip()),
             '书封面URL':'https:%s'%response.xpath(self.book_img_X).extract()[0].strip(),
@@ -64,7 +66,6 @@ class QidianSpider(scrapy.Spider):
             '总推荐':'',
             '周推荐':'',
             '作者信息':{
-                '作者UUID':self.time_uuid(),
                 '姓名':self.reglux(response.text, self.book_name_writer, False)[0][1],
                 '作者简介':self.reglux(response.text, self.book_writer_intro, True)[0][1],
                 '作品总数':self.reglux(response.text, self.book_writer_works, True)[0],
@@ -73,10 +74,14 @@ class QidianSpider(scrapy.Spider):
             },
             '连载状态':self.reglux(response.text, self.book_action, False)[0],
             '分类':self.reglux(response.text, self.book_name_writer, False)[0][2],
+            '子分类':response.xpath(self.book_category_X).extract()[-1],
+            '标签':','.join(response.xpath(self.book_category_X).extract()),
             '简介':self.reglux(response.text, self.book_intro, False)[0],
             '介绍':self.reglux(response.text, self.book_introMore, False)[0].replace('\u3000\u3000',''),
             '书源URL':response.url,
+            '笔趣阁URL':'',
             '小说目录':{},
+            '上传时间':'',
         }
         index_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = BI_resdict['书id'])
         yield scrapy.Request(url=index_url, callback=self.ajax_index, meta={"item": BI_resdict})
@@ -100,9 +105,11 @@ class QidianSpider(scrapy.Spider):
                     indexList.append(self.chaster_handler(n))
 
             tempdict['小说目录'] = indexList
+            tempdict['上传时间'] = tempdict['小说目录'][0]['更新时间']
 
             # 起点小说的最新章节名
             tempdict['最新章节'] = tempdict['小说目录'][-1]['章节名']
+            tempdict['最新章节更新时间'] = tempdict['小说目录'][-1]['更新时间']
 
 
             '''
@@ -143,6 +150,7 @@ class QidianSpider(scrapy.Spider):
         else:
             names = response.xpath("/html/body/div[@class='result-list']/div[@class='result-item result-game-item']/div[@class='result-game-item-detail']/h3[@class='result-item-title result-game-item-title']/a[@class='result-game-item-title-link']/span/text()").extract()
             urls = response.xpath("/html/body/div[@class='result-list']/div[@class='result-item result-game-item']/div[@class='result-game-item-detail']/h3[@class='result-item-title result-game-item-title']/a[@class='result-game-item-title-link']/@href").extract()
+            response.meta['item']['笔趣阁URL'] = urls[names.index(response.meta['item']['书名'])]
             meta = {
                 "item": response.meta['item'],
                 'requests': response.meta['requests'],
@@ -342,13 +350,13 @@ class QidianSpider(scrapy.Spider):
         base64_data = base64.b64encode(req.content)
         return 'data:image/jpg;base64,' + bytes.decode(base64_data)
 
-    def time_uuid(self):
+    def code_md5(self,tempStr):
         '''
         生成uuid1
         :return: 基于MAC地址、当前时间戳、随机数生成。
         '''
-        import uuid
-        return str(uuid.uuid1())
+        import hashlib
+        return hashlib.md5(tempStr).hexdigest()
 
     def CtoE(self,tempStr):
         '''
