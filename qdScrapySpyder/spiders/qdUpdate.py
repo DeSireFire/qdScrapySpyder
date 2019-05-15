@@ -5,7 +5,8 @@ import scrapy,re,os.path,json,difflib,datetime,time
 class QidianSpider(scrapy.Spider):
     name = "qidian"
     allowed_domains = ["qidian.com","560xs.com","biquge.com.cn","biqusoso.com","biquge5200.cc","xbiquge6.com","zwdu.com"]
-    start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(1, 5000)]
+    start_urls = ['https://www.qidian.com/all']
+    # start_urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(0, 5000)]
 
     custom_settings = {
         # 'COOKIES_ENABLED':False,
@@ -30,7 +31,14 @@ class QidianSpider(scrapy.Spider):
     book_cha = '<a class="red-btn J-getJumpUrl " href="([\s\S]*?)" id="readBtn" data-eid="qd_G03" data-bid="([\s\S]*?)" data-firstchapterjumpurl="([\s\S]*?)">'
 
     book_img_X = "//body//div//div[@class='book-img']/a[@id='bookImg']/img/@src"
+    book_category_X = "//body//div/div//p[@class='tag']/a[@class='red']"
     set_cookie = ''
+
+    def start_requests(self):
+        urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(1, 5000)]
+        for page in urls:
+            print("开始获取第%s页的小说"%page)
+            yield scrapy.Request(url=page,callback=self.parse)
 
     def parse(self, response):
         urls = response.xpath("/html/body/div[@class='wrap']/div[@class='all-pro-wrap box-center cf']/div[@class='main-content-wrap fl']/div[@class='all-book-list']/div[@class='book-img-text']/ul[@class='all-img-list cf']/li/div[@class='book-img-box']/a/@href").extract()
@@ -40,13 +48,17 @@ class QidianSpider(scrapy.Spider):
                     self.set_cookie = str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]
                 yield scrapy.Request(url='https:%s'%i, callback=self.parse_novel_info)
         else:
+            print('%s 请求速度过快，未获取到数据，重试！'%response.url)
             yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True, meta={'dont_retry':True})
 
     def parse_novel_info(self, response):
         BI_resdict = {
+            '书md5':self.code_md5(response.url),
             '书id':response.url[29:],
             '书封面':self.imgToBase64('https:%s'%response.xpath(self.book_img_X).extract()[0].strip()),
+            '书封面URL':'https:%s'%response.xpath(self.book_img_X).extract()[0].strip(),
             '书名':self.reglux(response.text, self.book_name_writer, False)[0][0],
+            '评分':self.scoreGet(response.url[29:]),
             '总字数':0,
             '总点击数':'',
             '阅文总点击':'',
@@ -54,7 +66,6 @@ class QidianSpider(scrapy.Spider):
             '总推荐':'',
             '周推荐':'',
             '作者信息':{
-                '作者UUID':self.time_uuid(),
                 '姓名':self.reglux(response.text, self.book_name_writer, False)[0][1],
                 '作者简介':self.reglux(response.text, self.book_writer_intro, True)[0][1],
                 '作品总数':self.reglux(response.text, self.book_writer_works, True)[0],
@@ -63,10 +74,18 @@ class QidianSpider(scrapy.Spider):
             },
             '连载状态':self.reglux(response.text, self.book_action, False)[0],
             '分类':self.reglux(response.text, self.book_name_writer, False)[0][2],
+            '子分类':response.xpath(self.book_category_X).extract()[-1],
+            '标签':','.join(response.xpath(self.book_category_X).extract()),
             '简介':self.reglux(response.text, self.book_intro, False)[0],
             '介绍':self.reglux(response.text, self.book_introMore, False)[0].replace('\u3000\u3000',''),
             '书源URL':response.url,
+            '笔趣阁URL':'',
             '小说目录':{},
+            '小说章节数':0,
+            '上传时间':'',
+            '最新章节':'',
+            '最新章节更新时间':'',
+            '章节爬取状态':0, # 0 未爬取，1 正在爬取，2 爬取完毕
         }
         index_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = BI_resdict['书id'])
         yield scrapy.Request(url=index_url, callback=self.ajax_index, meta={"item": BI_resdict})
@@ -78,7 +97,9 @@ class QidianSpider(scrapy.Spider):
         if 'data' not in datas:
             print(response.url)
             print(datas)
-            yield scrapy.Request(url=response.url, callback=self.ajax_index, meta={"item": tempdict,'dont_retry':True,}, dont_filter=True)
+            # 更新csrf
+            n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = response.url.split('bookId=')[-1])
+            yield scrapy.Request(url=n_url, callback=self.ajax_index, meta={"item": tempdict,'dont_retry':True,}, dont_filter=True)
         else:
             indexList = []
             for i in list(datas['data']['vs']):
@@ -87,10 +108,20 @@ class QidianSpider(scrapy.Spider):
                     tempdict['总字数'] += n['cnt'] # 字数统计
                     indexList.append(self.chaster_handler(n))
 
-            tempdict['小说目录'] = indexList
+            # 连载状态
+            if '连载' in tempdict['连载状态']:
+                tempdict['连载状态'] = 0
+            else:
+                tempdict['连载状态'] = 1
 
-            # 起点小说的最新章节名
+            # 起点小说目录详情
+            tempdict['小说目录'] = indexList
+            tempdict['小说章节数'] = len(indexList)
+            tempdict['上传时间'] = tempdict['小说目录'][0]['更新时间']
+
+            # 起点小说的最新章节
             tempdict['最新章节'] = tempdict['小说目录'][-1]['章节名']
+            tempdict['最新章节更新时间'] = tempdict['小说目录'][-1]['更新时间']
 
 
             '''
@@ -131,6 +162,8 @@ class QidianSpider(scrapy.Spider):
         else:
             names = response.xpath("/html/body/div[@class='result-list']/div[@class='result-item result-game-item']/div[@class='result-game-item-detail']/h3[@class='result-item-title result-game-item-title']/a[@class='result-game-item-title-link']/span/text()").extract()
             urls = response.xpath("/html/body/div[@class='result-list']/div[@class='result-item result-game-item']/div[@class='result-game-item-detail']/h3[@class='result-item-title result-game-item-title']/a[@class='result-game-item-title-link']/@href").extract()
+            response.meta['item']['笔趣阁URL'] = urls[names.index(response.meta['item']['书名'])]
+            response.meta['item']['章节爬取状态'] = 1,
             meta = {
                 "item": response.meta['item'],
                 'requests': response.meta['requests'],
@@ -154,52 +187,59 @@ class QidianSpider(scrapy.Spider):
         nameList = response.xpath(response.meta['xpath'][0][0]+'text()').extract()[response.meta['xpath'][0][1]:response.meta['xpath'][0][2]]
 
         # 小说基础信息表管道
-        from qdScrapySpyder.items import QidianItem
-        item = QidianItem()
-        item['bImgBase64'] = response.meta['item']['书封面']  # 封面
-        item['bName'] = response.meta['item']['书名']  # 书名
-        item['bKeys'] = response.meta['item']['总字数']  # 总字数
-        item['bResClick'] = response.meta['item']['总点击数']  # 总点击数
-        item['bClick'] = response.meta['item']['阅文总点击']  # 阅文总点击
-        item['bVIPClick'] = response.meta['item']['会员周点击']  # 会员周点击
-        item['bResRecommend'] = response.meta['item']['总推荐']  # 总推荐
-        item['bWeekRecommend'] = response.meta['item']['周推荐']  # 周推荐
-        item['bWriterName'] = response.meta['item']['作者信息']['作者UUID']  # 作者UUID
-        item['bAction'] = response.meta['item']['连载状态']  # 连载状态
-        item['bType'] = response.meta['item']['分类']  # 分类
-        item['bIntro'] = response.meta['item']['简介']  # 简介
-        item['bMoreIntro'] = response.meta['item']['介绍']  # 介绍
-        item['bURL'] = response.meta['item']['书源URL']  # 书源URL
-        # item['bIndex'] = tempDict['小说目录']  # 小说目录
-        item['isD'] = 0  # 是否属于删除状态
-        yield item
+        from qdScrapySpyder.items import qidian_index
+        item = qidian_index()
+        item['code'] = response.meta['item']['书md5']  # 书md5
+        item['name'] = response.meta['item']['书名']  # 书名
+        item['category'] = response.meta['item']['分类']  # 分类
+        item['sub_category'] = response.meta['item']['子分类']  # 子分类
+        item['author'] = response.meta['item']['作者信息']['姓名']  # 作者信息
+        item['intro'] = response.meta['item']['简介']  # 简介
+        item['info'] = response.meta['item']['介绍']  # 介绍
+        item['score'] = response.meta['item']['评分']  # 评分
+        item['cover_url'] = response.meta['item']['书封面URL']  # 书封面URL
+        item['uptime'] = response.meta['item']['上传时间']  # 上传时间
+        item['count_chapter'] = response.meta['item']['小说章节数']  # 小说章节数
+        item['tags'] = response.meta['item']['标签']  # 标签
+        item['new_chapter'] = response.meta['item']['最新章节']  # 最新章节
+        item['new_uptime'] = response.meta['item']['最新章节更新时间']  # 最新章节更新时间
+        item['size_num'] = response.meta['item']['总字数']  # 总字数
+        item['click_num'] = response.meta['item']['总点击数']  # 总点击数
+        item['week_click_num'] = response.meta['item']['会员周点击']  # 会员周点击
+        item['recommend_num'] = response.meta['item']['总推荐']  # 总推荐
+        item['week_recommend_num'] = response.meta['item']['周推荐']  # 周推荐
+        item['status'] = response.meta['item']['连载状态']  # 连载状态
+        item['chapter_status'] = response.meta['item']['章节爬取状态']  # 章节爬取状态
+        item['qidian_url'] = response.meta['item']['书源URL']  # 书源URL
+        item['relation_biquge'] = response.meta['item']['笔趣阁URL']  # 笔趣阁URL
+        # yield item
 
-        # 作者信息表管道
-        from qdScrapySpyder.items import QidianWriterItem
-        item = QidianWriterItem()
-        item['wUUID'] = response.meta['item']['作者信息']['作者UUID']  # 作者UUID
-        item['wName'] = response.meta['item']['作者信息']['姓名']  # 姓名
-        item['wItro'] = response.meta['item']['作者信息']['作者简介']  # 作者简介
-        item['wWorks'] = response.meta['item']['作者信息']['作品总数']  # 作品总数
-        item['wWorkKeys'] = response.meta['item']['作者信息']['累计字数']  # 累计字数
-        item['wWorkDays'] = response.meta['item']['作者信息']['创作天数']  # 创作天数
-        item['isD'] = 0  # 是否属于删除状态
-        yield item
+        # 图片信息表管道
+        from qdScrapySpyder.items import qidian_cover
+        item = qidian_cover()
+        item['code'] = response.meta['item']['书md5']  # code编码
+        item['type'] = 'jpg' # 数据类型
+        item['img'] = response.meta['item']['书封面']  # 图片base64
+        # yield item
 
         if len(nameList) != len(response.meta['item']['小说目录']):
                 if response.meta['updateBool']:# 是否只爬取最新的章节
                     info = {
+                        'code':response.meta['item']['书md5'],
                         '文章顺序': len(nameList),
                         '所属小说名': response.meta['item']['书名'],
                         '所属卷名': '正文卷',
                         '章节名': nameList[-1],
                         '更新时间': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         '字数': 0,
+                        '正文': '',
+                        '最新章节名': response.meta['item']['最新章节'],
                     }
-                    yield scrapy.Request(url=response.meta['url_home'] + urlList[-1], callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
+                    yield scrapy.Request(url=response.meta['url_home'] + urlList[-1], callback=self.content_downLoader,meta={ "item": response.meta['item'], "info": info, 'xpath': response.meta['xpath'][1]})
                 else:
                     for name, url in zip(nameList, urlList):
                         info = {
+                            'code': response.meta['item']['书md5'],
                             '文章顺序': nameList.index(name) + 1,
                             '所属小说名': response.meta['item']['书名'],
                             '所属卷名': '正文卷',
@@ -207,11 +247,13 @@ class QidianSpider(scrapy.Spider):
                             '更新时间': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             '字数': 0,
                             '正文':'',
+                            '最新章节名': response.meta['item']['最新章节'],
                         }
-                        yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
+                        yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={ "item": response.meta['item'], "info": info, 'xpath': response.meta['xpath'][1]})
         else:
             for url, info in zip(urlList, response.meta['item']['小说目录']):
                 info = {
+                    'code': response.meta['item']['书md5'],
                     '文章顺序': urlList.index(url) + 1,
                     '所属小说名': response.meta['item']['书名'],
                     '所属卷名': '正文卷',
@@ -219,8 +261,9 @@ class QidianSpider(scrapy.Spider):
                     '更新时间': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     '字数': 0,
                     '正文': '',
+                    '最新章节名': response.meta['item']['最新章节'],
                 }
-                yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={"item": info, 'xpath': response.meta['xpath'][1]})
+                yield scrapy.Request(url=response.meta['url_home'] + url, callback=self.content_downLoader,meta={ "item": response.meta['item'], "info": info, 'xpath': response.meta['xpath'][1]})
 
 
 
@@ -229,33 +272,113 @@ class QidianSpider(scrapy.Spider):
         '''
         正文采集函数
         '''
-        response.meta['item']['正文'] = self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[0])
+        response.meta['info']['正文'] = self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[0])
         # response.meta['item']['正文'] = self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[response.meta['xpath'][1]:response.meta['xpath'][2]])
-        response.meta['item']['字数'] = len(self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[0]))
+        response.meta['info']['字数'] = len(self.clearHtml(response.xpath(response.meta['xpath'][0]).extract()[0]))
 
         # 小说正文内容管道
-        from qdScrapySpyder.items import QidianChapterItem
-        item = QidianChapterItem()
-        item['cOrder'] = response.meta['item']['文章顺序']  # '文章顺序'
-        item['cBook'] = response.meta['item']['所属小说名']  # '所属卷名'
-        item['cTitle'] = response.meta['item']['所属卷名']  # '所属卷名'
-        item['cName'] = response.meta['item']['章节名']  # '章节名'
-        item['fullName'] = '%s-%s-%s'%(response.meta['item']['所属小说名'],response.meta['item']['所属卷名'],response.meta['item']['章节名'])  # '章节全名，建议建立 唯一索引 例如：放开那个女巫_正文卷_第一千四百六十八章 燃点'
-        item['cUT'] = response.meta['item']['更新时间']  # '更新时间'
-        item['cKeys'] = response.meta['item']['字数']  # '字数'
-        item['cContent'] = response.meta['item']['正文']  # '字数'
-        item['isD'] = 0  # 是否属于删除状态
-        yield item
+        from qdScrapySpyder.items import content_0
+        item = content_0()
+        item['code'] = response.meta['item']['code']  # 'code编码'
+        item['rand'] = response.meta['item']['文章顺序']  # '章节排序编号'
+        item['title'] = response.meta['item']['章节名']  # '章节标题'
+        item['content'] = response.meta['item']['正文']  # '章节内容'
+        item['remote'] = '%s-%s-%s'%(response.meta['item']['所属小说名'],response.meta['item']['所属卷名'],response.meta['item']['章节名'])  # '章节备注'
+        # yield item
+
+        if response.meta['info']['最新章节名'] == response.meta['info']['章节名']:
+            from qdScrapySpyder.items import qidian_index
+            item = qidian_index()
+            item['code'] = response.meta['item']['书md5']  # 书md5
+            item['name'] = response.meta['item']['书名']  # 书名
+            item['category'] = response.meta['item']['分类']  # 分类
+            item['sub_category'] = response.meta['item']['子分类']  # 子分类
+            item['author'] = response.meta['item']['作者信息']['姓名']  # 作者信息
+            item['intro'] = response.meta['item']['简介']  # 简介
+            item['info'] = response.meta['item']['介绍']  # 介绍
+            item['score'] = response.meta['item']['评分']  # 评分
+            item['cover_url'] = response.meta['item']['书封面URL']  # 书封面URL
+            item['uptime'] = response.meta['item']['上传时间']  # 上传时间
+            item['count_chapter'] = response.meta['item']['小说章节数']  # 小说章节数
+            item['tags'] = response.meta['item']['标签']  # 标签
+            item['new_chapter'] = response.meta['item']['最新章节']  # 最新章节
+            item['new_uptime'] = response.meta['item']['最新章节更新时间']  # 最新章节更新时间
+            item['size_num'] = response.meta['item']['总字数']  # 总字数
+            item['click_num'] = response.meta['item']['总点击数']  # 总点击数
+            item['week_click_num'] = response.meta['item']['会员周点击']  # 会员周点击
+            item['recommend_num'] = response.meta['item']['总推荐']  # 总推荐
+            item['week_recommend_num'] = response.meta['item']['周推荐']  # 周推荐
+            item['status'] = response.meta['item']['连载状态']  # 连载状态
+            item['chapter_status'] = 2  # 章节爬取状态
+            item['qidian_url'] = response.meta['item']['书源URL']  # 书源URL
+            item['relation_biquge'] = response.meta['item']['笔趣阁URL']  # 笔趣阁URL
+            # yield item
 
     # 工具函数
-    def fontAnti(self,):
+    @classmethod
+    def proxy_list(self, url, testURL='https://www.qidian.com/all'):
+        """
+        获取并检测代理池返回的IP
+        :param url: 获取IP的代理池地址
+        :param testURL: 检测网址
+        :return: 一个能用的ip组成的proxies字典
+        """
+        import requests
+        count = 0  # 获取的IP数
+        try:
+            while count != 0:
+                proxy = requests.get(url)
+                for i in range(0, 4):
+                    proxies = {
+                        'http': 'http://%s' % (proxy),
+                        'https': 'https://%s' % (proxy)
+                    }
+                    r = requests.get(testURL, proxies=proxies)
+                    if (not r.ok) or len(r.content) < 500:
+                        r = requests.get("http://45.77.254.61:5010/delete?proxy=%s" %proxy)
+                    else:
+                        return proxies
+
+        except Exception as e:
+            # print(e)
+            return None
+
+    @classmethod
+    def scoreGet(self,tempStr):
         '''
-        todo 字体反爬
-        :return:
+        小说评分ajax
+        :param tempStr: 字符串，小说的起点ID
+        :return: base64码
         '''
-        # from fontTools.ttLib import TTFont
-        # 没戏没戏
-        pass
+        import requests
+        from qdScrapySpyder.settings import PROXY_URL
+        myheader = {
+            'Referer': 'https://book.qidian.com/info/%s'%tempStr,
+            'Host': 'book.qidian.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
+        }
+        # for line in self.csrfGet():  # 按照字符：进行划分读取
+        #     # 其设置为1就会把字符串拆分成2份
+        #     name, value = line.strip().split('=', 1)
+        #     cookies[name] = value  # 为字典cookies添加内容
+        scoreUrl = "https://book.qidian.com/ajax/comment/index?{_csrfToken}&bookId={bookId}&pageSize=15".format(_csrfToken=self.csrfGet()[0],bookId=tempStr)
+        req = requests.get(url=scoreUrl, headers=myheader, proxies=self.proxy_list(PROXY_URL))
+        return req.json()['data']['rate']
+
+    @classmethod
+    def csrfGet(self):
+        '''
+        获取起点的csrf,并测试代理池IP有效性
+        :return:字符串。“_csrfToken=ojyuGPBlNRfhXZs0Mhdou7mom079Ya0mFamF6ak8; expires=Tue, 12-May-2020 16:37:49 GMT; path=/; domain=.qidian.com, newstatisticUUID=1557765469_2081508423; expires=Wed, 12-May-2021 16:37:49 GMT; path=/; domain=.qidian.com”
+        '''
+        import requests
+        from qdScrapySpyder.settings import PROXY_URL
+        headers = {
+            'Host':'www.qidian.com',
+            'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'
+        }
+        req = requests.get(url='https://www.qidian.com/all',headers=headers, proxies=self.proxy_list(PROXY_URL))
+        return req.headers['set-cookie'].split(';')
 
     @classmethod
     def imgToBase64(self,imgId):
@@ -270,17 +393,17 @@ class QidianSpider(scrapy.Spider):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
         }
         # print("封面地址：https://bookcover.yuewen.com/qdbimg/349573/%s/180"%imgId)
-        req = requests.get(url=imgId.replace('%0D',''), headers=myheader)
+        req = requests.get(url=imgId, headers=myheader)
         base64_data = base64.b64encode(req.content)
         return 'data:image/jpg;base64,' + bytes.decode(base64_data)
 
-    def time_uuid(self):
+    def code_md5(self,tempStr):
         '''
         生成uuid1
         :return: 基于MAC地址、当前时间戳、随机数生成。
         '''
-        import uuid
-        return str(uuid.uuid1())
+        import hashlib
+        return hashlib.md5(tempStr).hexdigest()
 
     def CtoE(self,tempStr):
         '''
@@ -309,9 +432,7 @@ class QidianSpider(scrapy.Spider):
         :return:
         '''
         # todo ㈧㈠Δ』中文网Ｗｗ％Ｗ．ん８⒈Ｚｗ．ＣＯＭ沙雕字符清洗
-        tempStr = re.sub(r'</?\w+[^>]*>', '', tempStr)
-        tempStr = re.sub(r'[\u0060|\u0021-\u002c|\u002e-\u002f|\u003a-\u003f|\u2200-\u22ff|\uFB00-\uFFFD|\u2E80-\u33FF]', '', tempStr)
-        return tempStr
+        return re.sub(r'</?\w+[^>]*>', '', tempStr)
 
     def chaster_handler(self,temp):
         '''
@@ -346,4 +467,8 @@ class QidianSpider(scrapy.Spider):
             return ['暂无具体信息...']
 
 if __name__ == '__main__':
-    print(QidianSpider.imgToBase64('https://bookcover.yuewen.com/qdbimg/349573/2571593/180'))
+    # print(QidianSpider.imgToBase64('https://bookcover.yuewen.com/qdbimg/349573/2571593/180'))
+    # print(os.path.join(os.path.abspath(os.path.dirname(__file__)),'breakPoint.txt'))
+    # print(QidianSpider.breakPoint({'page':15,'pages':[65,787],'bookName':[888,666]}))
+    # QidianSpider.csrfGet()
+    QidianSpider.scoreGet('1004608738')
