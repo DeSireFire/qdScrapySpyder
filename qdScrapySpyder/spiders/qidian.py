@@ -175,23 +175,30 @@ class QidianSpider(scrapy.Spider):
 
         # 小说基础信息表管道
         from qdScrapySpyder.items import qidian_index
-        # item = QidianItem()
-        # item['bImgBase64'] = response.meta['item']['书封面']  # 封面
-        # item['bName'] = response.meta['item']['书名']  # 书名
-        # item['bKeys'] = response.meta['item']['总字数']  # 总字数
-        # item['bResClick'] = response.meta['item']['总点击数']  # 总点击数
-        # item['bClick'] = response.meta['item']['阅文总点击']  # 阅文总点击
-        # item['bVIPClick'] = response.meta['item']['会员周点击']  # 会员周点击
-        # item['bResRecommend'] = response.meta['item']['总推荐']  # 总推荐
-        # item['bWeekRecommend'] = response.meta['item']['周推荐']  # 周推荐
-        # item['bWriterName'] = response.meta['item']['作者信息']['作者UUID']  # 作者UUID
-        # item['bAction'] = response.meta['item']['连载状态']  # 连载状态
-        # item['bType'] = response.meta['item']['分类']  # 分类
-        # item['bIntro'] = response.meta['item']['简介']  # 简介
-        # item['bMoreIntro'] = response.meta['item']['介绍']  # 介绍
-        # item['bURL'] = response.meta['item']['书源URL']  # 书源URL
-        # # item['bIndex'] = tempDict['小说目录']  # 小说目录
-        # item['isD'] = 0  # 是否属于删除状态
+        item = qidian_index()
+        item['code'] = response.meta['item']['书md5']  # 书md5
+        item['name'] = response.meta['item']['书名']  # 书名
+        item['category'] = response.meta['item']['分类']  # 分类
+        item['sub_category'] = response.meta['item']['子分类']  # 子分类
+        item['author'] = response.meta['item']['作者信息']['姓名']  # 作者信息
+        item['intro'] = response.meta['item']['简介']  # 简介
+        item['info'] = response.meta['item']['介绍']  # 介绍
+        item['score'] = response.meta['item']['评分']  # 评分
+        item['cover_url'] = response.meta['item']['书封面URL']  # 书封面URL
+        item['uptime'] = response.meta['item']['上传时间']  # 上传时间
+        item['count_chapter'] = response.meta['item']['分类']  # 章节数 todo
+        item['tags'] = response.meta['item']['标签']  # 标签
+        item['new_chapter'] = response.meta['item']['最新章节']  # 最新章节
+        item['new_uptime'] = response.meta['item']['最新章节更新时间']  # 最新章节更新时间
+        item['size_num'] = response.meta['item']['总字数']  # 总字数
+        item['click_num'] = response.meta['item']['总点击数']  # 总点击数
+        item['week_click_num'] = response.meta['item']['会员周点击']  # 会员周点击
+        item['recommend_num'] = response.meta['item']['总推荐']  # 总推荐
+        item['week_recommend_num'] = response.meta['item']['周推荐']  # 周推荐
+        item['status'] = response.meta['item']['连载状态']  # 书源URL todo
+        item['chapter_status'] = response.meta['item']['书源URL']  # 书源URL todo
+        item['qidian_url'] = response.meta['item']['书源URL']  # 书源URL
+        item['relation_biquge'] = response.meta['item']['笔趣阁URL']  # 笔趣阁URL
         # yield item
 
         # 作者信息表管道
