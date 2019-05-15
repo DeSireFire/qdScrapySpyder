@@ -81,7 +81,10 @@ class QidianSpider(scrapy.Spider):
             '书源URL':response.url,
             '笔趣阁URL':'',
             '小说目录':{},
+            '小说章节数':0,
             '上传时间':'',
+            '最新章节':'',
+            '最新章节更新时间':'',
         }
         index_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = BI_resdict['书id'])
         yield scrapy.Request(url=index_url, callback=self.ajax_index, meta={"item": BI_resdict})
@@ -104,10 +107,18 @@ class QidianSpider(scrapy.Spider):
                     tempdict['总字数'] += n['cnt'] # 字数统计
                     indexList.append(self.chaster_handler(n))
 
+            # 连载状态
+            if '连载' in tempdict['连载状态']:
+                tempdict['连载状态'] = 0
+            else:
+                tempdict['连载状态'] = 1
+
+            # 起点小说目录详情
             tempdict['小说目录'] = indexList
+            tempdict['小说章节数'] = len(indexList)
             tempdict['上传时间'] = tempdict['小说目录'][0]['更新时间']
 
-            # 起点小说的最新章节名
+            # 起点小说的最新章节
             tempdict['最新章节'] = tempdict['小说目录'][-1]['章节名']
             tempdict['最新章节更新时间'] = tempdict['小说目录'][-1]['更新时间']
 
@@ -186,7 +197,7 @@ class QidianSpider(scrapy.Spider):
         item['score'] = response.meta['item']['评分']  # 评分
         item['cover_url'] = response.meta['item']['书封面URL']  # 书封面URL
         item['uptime'] = response.meta['item']['上传时间']  # 上传时间
-        item['count_chapter'] = response.meta['item']['分类']  # 章节数 todo
+        item['count_chapter'] = response.meta['item']['小说章节数']  # 小说章节数
         item['tags'] = response.meta['item']['标签']  # 标签
         item['new_chapter'] = response.meta['item']['最新章节']  # 最新章节
         item['new_uptime'] = response.meta['item']['最新章节更新时间']  # 最新章节更新时间
@@ -195,22 +206,18 @@ class QidianSpider(scrapy.Spider):
         item['week_click_num'] = response.meta['item']['会员周点击']  # 会员周点击
         item['recommend_num'] = response.meta['item']['总推荐']  # 总推荐
         item['week_recommend_num'] = response.meta['item']['周推荐']  # 周推荐
-        item['status'] = response.meta['item']['连载状态']  # 书源URL todo
+        item['status'] = response.meta['item']['连载状态']  # 连载状态
         item['chapter_status'] = response.meta['item']['书源URL']  # 书源URL todo
         item['qidian_url'] = response.meta['item']['书源URL']  # 书源URL
         item['relation_biquge'] = response.meta['item']['笔趣阁URL']  # 笔趣阁URL
         # yield item
 
-        # 作者信息表管道
+        # 图片信息表管道
         from qdScrapySpyder.items import qidian_cover
-        # item = QidianWriterItem()
-        # item['wUUID'] = response.meta['item']['作者信息']['作者UUID']  # 作者UUID
-        # item['wName'] = response.meta['item']['作者信息']['姓名']  # 姓名
-        # item['wItro'] = response.meta['item']['作者信息']['作者简介']  # 作者简介
-        # item['wWorks'] = response.meta['item']['作者信息']['作品总数']  # 作品总数
-        # item['wWorkKeys'] = response.meta['item']['作者信息']['累计字数']  # 累计字数
-        # item['wWorkDays'] = response.meta['item']['作者信息']['创作天数']  # 创作天数
-        # item['isD'] = 0  # 是否属于删除状态
+        item = qidian_cover()
+        item['code'] = response.meta['item']['书md5']  # code编码
+        item['type'] = 'jpg' # 数据类型
+        item['img'] = response.meta['item']['书封面']  # 图片base64
         # yield item
 
         if len(nameList) != len(response.meta['item']['小说目录']):
