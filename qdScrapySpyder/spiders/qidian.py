@@ -223,6 +223,7 @@ class QidianSpider(scrapy.Spider):
         if len(nameList) != len(response.meta['item']['小说目录']):
                 if response.meta['updateBool']:# 是否只爬取最新的章节
                     info = {
+                        'code':response.meta['item']['书md5'],
                         '文章顺序': len(nameList),
                         '所属小说名': response.meta['item']['书名'],
                         '所属卷名': '正文卷',
@@ -234,6 +235,7 @@ class QidianSpider(scrapy.Spider):
                 else:
                     for name, url in zip(nameList, urlList):
                         info = {
+                            'code': response.meta['item']['书md5'],
                             '文章顺序': nameList.index(name) + 1,
                             '所属小说名': response.meta['item']['书名'],
                             '所属卷名': '正文卷',
@@ -246,6 +248,7 @@ class QidianSpider(scrapy.Spider):
         else:
             for url, info in zip(urlList, response.meta['item']['小说目录']):
                 info = {
+                    'code': response.meta['item']['书md5'],
                     '文章顺序': urlList.index(url) + 1,
                     '所属小说名': response.meta['item']['书名'],
                     '所属卷名': '正文卷',
@@ -269,16 +272,12 @@ class QidianSpider(scrapy.Spider):
 
         # 小说正文内容管道
         from qdScrapySpyder.items import content_0
-        # item = QidianChapterItem()
-        # item['cOrder'] = response.meta['item']['文章顺序']  # '文章顺序'
-        # item['cBook'] = response.meta['item']['所属小说名']  # '所属卷名'
-        # item['cTitle'] = response.meta['item']['所属卷名']  # '所属卷名'
-        # item['cName'] = response.meta['item']['章节名']  # '章节名'
-        # item['fullName'] = '%s-%s-%s'%(response.meta['item']['所属小说名'],response.meta['item']['所属卷名'],response.meta['item']['章节名'])  # '章节全名，建议建立 唯一索引 例如：放开那个女巫_正文卷_第一千四百六十八章 燃点'
-        # item['cUT'] = response.meta['item']['更新时间']  # '更新时间'
-        # item['cKeys'] = response.meta['item']['字数']  # '字数'
-        # item['cContent'] = response.meta['item']['正文']  # '字数'
-        # item['isD'] = 0  # 是否属于删除状态
+        item = content_0()
+        item['code'] = response.meta['item']['code']  # 'code编码'
+        item['rand'] = response.meta['item']['文章顺序']  # '章节排序编号'
+        item['title'] = response.meta['item']['章节名']  # '章节标题'
+        item['content'] = response.meta['item']['正文']  # '章节内容'
+        item['remote'] = '%s-%s-%s'%(response.meta['item']['所属小说名'],response.meta['item']['所属卷名'],response.meta['item']['章节名'])  # '章节备注'
         # yield item
 
     # 工具函数
