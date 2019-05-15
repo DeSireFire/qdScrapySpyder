@@ -33,12 +33,12 @@ class QidianPipeline(object):
         self.db.close()
 
     def process_item(self,item,spider):
-        if 'bName' in dict(item).keys():
-            self.mysql_insert_update(item, 'QidianItem')
-        elif 'wName' in dict(item).keys():
-            self.mysql_insert_update(item, 'QidianWriterItem')
+        if 'qidian_url' in dict(item).keys():
+            self.mysql_insert_update(item, 'qidian_index')
+        elif 'img' in dict(item).keys():
+            self.mysql_insert_update(item, 'qidian_cover')
         else:
-            self.mysql_insert_update(item, 'QidianChapterItem')
+            self.mysql_insert_update(item, 'content_%s'%dict(item).keys()['code'][0])
         return item
 
     def mysql_insert_update(self,item,tableName):
