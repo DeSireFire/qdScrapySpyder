@@ -37,12 +37,13 @@ class QidianSpider(scrapy.Spider):
     def start_requests(self):
         urls = ['https://www.qidian.com/all?page=%s'%str(page) for page in range(1, 5000)]
         for page in urls:
-            print("开始获取第%s页的小说"%page)
+            # print("开始获取第%s页的小说"%page)
             yield scrapy.Request(url=page,callback=self.parse)
 
     def parse(self, response):
         urls = response.xpath("/html/body/div[@class='wrap']/div[@class='all-pro-wrap box-center cf']/div[@class='main-content-wrap fl']/div[@class='all-book-list']/div[@class='book-img-text']/ul[@class='all-img-list cf']/li/div[@class='book-img-box']/a/@href").extract()
         if urls:
+            print('%s 页面作品列表获取成功！'%response.url)
             for i in urls:
                 if response.headers.getlist("Set-Cookie"):
                     self.set_cookie = str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]
@@ -212,7 +213,7 @@ class QidianSpider(scrapy.Spider):
         item['chapter_status'] = response.meta['item']['章节爬取状态']  # 章节爬取状态
         item['qidian_url'] = response.meta['item']['书源URL']  # 书源URL
         item['relation_biquge'] = response.meta['item']['笔趣阁URL']  # 笔趣阁URL
-        # yield item
+        yield item
 
         # 图片信息表管道
         from qdScrapySpyder.items import qidian_cover
@@ -279,11 +280,11 @@ class QidianSpider(scrapy.Spider):
         # 小说正文内容管道
         from qdScrapySpyder.items import content_0
         item = content_0()
-        item['code'] = response.meta['item']['code']  # 'code编码'
-        item['rand'] = response.meta['item']['文章顺序']  # '章节排序编号'
-        item['title'] = response.meta['item']['章节名']  # '章节标题'
-        item['content'] = response.meta['item']['正文']  # '章节内容'
-        item['remote'] = '%s-%s-%s'%(response.meta['item']['所属小说名'],response.meta['item']['所属卷名'],response.meta['item']['章节名'])  # '章节备注'
+        item['code'] = response.meta['info']['code']  # 'code编码'
+        item['rand'] = response.meta['info']['文章顺序']  # '章节排序编号'
+        item['title'] = response.meta['info']['章节名']  # '章节标题'
+        item['content'] = response.meta['info']['正文']  # '章节内容'
+        item['remote'] = '%s-%s-%s'%(response.meta['info']['所属小说名'],response.meta['info']['所属卷名'],response.meta['info']['章节名'])  # '章节备注'
         # yield item
 
         if response.meta['info']['最新章节名'] == response.meta['info']['章节名']:
@@ -312,7 +313,7 @@ class QidianSpider(scrapy.Spider):
             item['chapter_status'] = 2  # 章节爬取状态
             item['qidian_url'] = response.meta['item']['书源URL']  # 书源URL
             item['relation_biquge'] = response.meta['item']['笔趣阁URL']  # 笔趣阁URL
-            # yield item
+            yield item
 
     # 工具函数
     @classmethod
@@ -397,13 +398,14 @@ class QidianSpider(scrapy.Spider):
         base64_data = base64.b64encode(req.content)
         return 'data:image/jpg;base64,' + bytes.decode(base64_data)
 
+    @classmethod
     def code_md5(self,tempStr):
         '''
         生成uuid1
         :return: 基于MAC地址、当前时间戳、随机数生成。
         '''
         import hashlib
-        return hashlib.md5(tempStr).hexdigest()
+        return hashlib.md5(tempStr.encode("utf-8")).hexdigest()
 
     def CtoE(self,tempStr):
         '''
@@ -471,4 +473,5 @@ if __name__ == '__main__':
     # print(os.path.join(os.path.abspath(os.path.dirname(__file__)),'breakPoint.txt'))
     # print(QidianSpider.breakPoint({'page':15,'pages':[65,787],'bookName':[888,666]}))
     # QidianSpider.csrfGet()
-    QidianSpider.scoreGet('1004608738')
+    print(QidianSpider.code_md5('https://blog.csdn.net/seven_3306/article/details/30254299'))
+    # QidianSpider.scoreGet('1004608738')

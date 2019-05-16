@@ -33,12 +33,13 @@ class QidianPipeline(object):
         self.db.close()
 
     def process_item(self,item,spider):
-        if 'qidian_url' in dict(item).keys():
+        if 'name' in dict(item).keys():
             self.mysql_insert_update(item, 'qidian_index')
         elif 'img' in dict(item).keys():
             self.mysql_insert_update(item, 'qidian_cover')
         else:
-            self.mysql_insert_update(item, 'content_%s'%dict(item).keys()['code'][0])
+            # self.mysql_insert_update(item, 'content_%s'%dict(item).keys()['code'][0])
+            self.mysql_insert_update(item, 'content_0')
         return item
 
     def mysql_insert_update(self,item,tableName):
@@ -64,4 +65,5 @@ class QidianPipeline(object):
             print("更新数据 时发生错误:%s" % e)
 
 if __name__ == '__main__':
-    QidianPipeline.mysql_insert_update
+    pass
+    # QidianPipeline.mysql_insert_update

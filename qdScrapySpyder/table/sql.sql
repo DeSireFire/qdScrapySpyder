@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS `qidian_index`;
 CREATE TABLE IF NOT EXISTS `qidian_index` (
 	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`code` VARCHAR(255) NULL COMMENT 'code编码',
+	`name` varchar(255) DEFAULT NULL COMMENT '书名',
 	`category` VARCHAR(255) NULL DEFAULT NULL COMMENT '分类',
 	`sub_category` VARCHAR(255) NULL DEFAULT NULL COMMENT '子分类',
 	`author` VARCHAR(255) NULL DEFAULT NULL COMMENT '作者',
@@ -40,6 +41,426 @@ CREATE TABLE IF NOT EXISTS `qidian_cover` (
 
 DROP TABLE IF EXISTS `content_0`;
 CREATE TABLE IF NOT EXISTS  `content_0` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_1`;
+CREATE TABLE IF NOT EXISTS  `content_1` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_2`;
+CREATE TABLE IF NOT EXISTS  `content_2` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_3`;
+CREATE TABLE IF NOT EXISTS  `content_3` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_4`;
+CREATE TABLE IF NOT EXISTS  `content_4` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_5`;
+CREATE TABLE IF NOT EXISTS  `content_5` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_6`;
+CREATE TABLE IF NOT EXISTS  `content_6` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_7`;
+CREATE TABLE IF NOT EXISTS  `content_7` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_8`;
+CREATE TABLE IF NOT EXISTS  `content_8` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_9`;
+CREATE TABLE IF NOT EXISTS  `content_9` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_a`;
+CREATE TABLE IF NOT EXISTS  `content_a` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_b`;
+CREATE TABLE IF NOT EXISTS  `content_b` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_c`;
+CREATE TABLE IF NOT EXISTS  `content_c` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_d`;
+CREATE TABLE IF NOT EXISTS  `content_d` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_e`;
+CREATE TABLE IF NOT EXISTS  `content_e` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_f`;
+CREATE TABLE IF NOT EXISTS  `content_f` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_g`;
+CREATE TABLE IF NOT EXISTS  `content_g` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_h`;
+CREATE TABLE IF NOT EXISTS  `content_h` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_i`;
+CREATE TABLE IF NOT EXISTS  `content_i` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_j`;
+CREATE TABLE IF NOT EXISTS  `content_j` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_k`;
+CREATE TABLE IF NOT EXISTS  `content_k` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_l`;
+CREATE TABLE IF NOT EXISTS  `content_l` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_m`;
+CREATE TABLE IF NOT EXISTS  `content_m` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_n`;
+CREATE TABLE IF NOT EXISTS  `content_n` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_o`;
+CREATE TABLE IF NOT EXISTS  `content_o` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_p`;
+CREATE TABLE IF NOT EXISTS  `content_p` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_q`;
+CREATE TABLE IF NOT EXISTS  `content_q` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_r`;
+CREATE TABLE IF NOT EXISTS  `content_r` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_s`;
+CREATE TABLE IF NOT EXISTS  `content_s` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_t`;
+CREATE TABLE IF NOT EXISTS  `content_t` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_u`;
+CREATE TABLE IF NOT EXISTS  `content_u` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_v`;
+CREATE TABLE IF NOT EXISTS  `content_v` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_w`;
+CREATE TABLE IF NOT EXISTS  `content_w` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_x`;
+CREATE TABLE IF NOT EXISTS  `content_x` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_y`;
+CREATE TABLE IF NOT EXISTS  `content_y` (
+	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
+	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
+	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
+	`content` TEXT NOT NULL COMMENT '章节内容',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	PRIMARY KEY (`id`),
+	INDEX `code_index`(`code`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+DROP TABLE IF EXISTS `content_z`;
+CREATE TABLE IF NOT EXISTS  `content_z` (
 	`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`code` VARCHAR(255) NOT NULL COMMENT 'code编码',
 	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',

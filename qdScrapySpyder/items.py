@@ -38,7 +38,7 @@ class qidian_index(scrapy.Item):
     status = scrapy.Field()    # 连载状态，连载中的小说为1，完本为0
     chapter_status = scrapy.Field()    # 连载状态，连载中的小说为1，完本为0
     qidian_url = scrapy.Field()    # 起点url
-    relation_biquge = scrapy.Field()    # 笔趣阁url
+    relation_biquge = scrapy.Field()    # 笔趣阁urlrr
 
 class content_0(scrapy.Item):
     '''
