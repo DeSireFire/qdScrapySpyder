@@ -38,8 +38,7 @@ class QidianPipeline(object):
         elif 'img' in dict(item).keys():
             self.mysql_insert_update(item, 'qidian_cover')
         else:
-            # self.mysql_insert_update(item, 'content_%s'%dict(item).keys()['code'][0])
-            self.mysql_insert_update(item, 'content_0')
+            self.mysql_insert_update(item, 'content_%s'%dict(item)['code'][0])
         return item
 
     def mysql_insert_update(self,item,tableName):

@@ -59,3 +59,5 @@ class qidian_cover(scrapy.Item):
     code = scrapy.Field()  # code编码
     type = scrapy.Field()  # 数据类型
     img = scrapy.Field()  # 图片base64
+
+# syntarerror.pid
