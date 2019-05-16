@@ -96,11 +96,14 @@ class QidianSpider(scrapy.Spider):
         tempdict = response.meta['item']
         # 获取速度过快，导致失败
         if 'data' not in datas:
-            print('%s 获取失败，更新csrf并返回任务队列'%(response.url))
-            # 更新csrf
-            n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = response.url.split('bookId=')[-1])
-            yield scrapy.Request(url=n_url, callback=self.ajax_index, meta={"item": tempdict,'dont_retry':True,}, dont_filter=True)
-        else:
+            print('%s 获取失败，尝试使用requests获取！')
+            datas = self.indexAjaxGet(response.url.split('bookId=')[-1])
+            if 'data' not in datas:
+                print('%s 尝试使用requests获取，更新csrf并返回任务队列'%(response.url))
+                # 更新csrf
+                n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = response.url.split('bookId=')[-1])
+                yield scrapy.Request(url=n_url, callback=self.ajax_index, meta={"item": tempdict,'dont_retry':True,}, dont_filter=True)
+        if 'data' in datas:
             indexList = []
             for i in list(datas['data']['vs']):
                 for n in i['cs']:   # {'uuid': 73, 'cN': '第七十章 期待', 'uT': '2016-12-05 15:08:26', 'cnt': 2826, 'cU': '_AaqI-dPJJ4uTkiRw_sFYA2/35xIQH46UOnwrjbX3WA1AA2', 'id': 343467910, 'sS': 1}
@@ -345,21 +348,25 @@ class QidianSpider(scrapy.Spider):
             return None
 
     @classmethod
-    def scoreGet(self,tempStr):
+    def indexAjaxGet(self,tempStr):
         '''
         小说评分ajax
         :param tempStr: 字符串，小说的起点ID
         :return: base64码
         '''
-        import requests
+        import requests,chardet
         myheader = {
             'Referer': 'https://book.qidian.com/info/%s'%tempStr,
             'Host': 'book.qidian.com',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
         }
-        scoreUrl = "https://book.qidian.com/ajax/comment/index?{_csrfToken}&bookId={bookId}&pageSize=15".format(_csrfToken=self.csrfGet()[0],bookId=tempStr)
-        req = requests.get(url=scoreUrl, headers=myheader, proxies=self.proxy_list())
-        return req.json()['data']['rate']
+        n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(
+            csrfToken=self.csrfGet()[0], bookeId=tempStr)
+        req = requests.get(url=n_url, headers=myheader, proxies=self.proxy_list())
+        req.encoding = chardet.detect(req.content)['encoding']
+        if req.encoding == "GB2312":
+            req.encoding = "GBK"
+        return req.json()
 
     @classmethod
     def scoreGet(self,tempStr):
@@ -485,5 +492,6 @@ if __name__ == '__main__':
     # print(QidianSpider.breakPoint({'page':15,'pages':[65,787],'bookName':[888,666]}))
     # QidianSpider.csrfGet()
     # print('content_%s'%QidianSpider.code_md5('https://blog.csdn.net/seven_3306/article/details/30254299')[0])
-    print(QidianSpider.scoreGet('1004608738'))
+    print(QidianSpider.indexAjaxGet('1004608738'))
+    # print(QidianSpider.scoreGet('1004608738'))
     # QidianSpider.bookListGet('https://www.qidian.com/all')

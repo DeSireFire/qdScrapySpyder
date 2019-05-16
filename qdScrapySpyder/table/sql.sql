@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS  `content_0` (
 	`rand` INT(11) NULL DEFAULT '0' COMMENT '章节排序编号',
 	`title` VARCHAR(255) NOT NULL COMMENT '章节标题',
 	`content` TEXT NOT NULL COMMENT '章节内容',
-	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注',
+	`remote` VARCHAR(255) NULL DEFAULT NULL COMMENT '章节备注（唯一）',
 	PRIMARY KEY (`id`),
 	INDEX `code_index`(`code`)
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4;
