@@ -18,6 +18,7 @@ class QidianSpider(scrapy.Spider):
     '''
     # 起点小说正则
     book_url = '<h4><a href="([\s\S]*?)" target="_blank" data-eid="([\s\S]*?)" data-bid="([\s\S]*?)">([\s\S]*?)</a></h4>\r'
+    book_img = '//bookcover.yuewen.com/qdbimg/([\s\S]*?)/([\s\S]*?)/180'
     book_name_writer = '<title>《([\s\S]*?)》_([\s\S]*?)著_([\s\S]*?)_起点中文网</title>'
     book_writer_intro = '<pclass="(extend)?">([\s\S]*?)<citeclass="iconfontbluej_infoUnfold"title="展开介绍">\ue623</cite></p></div><divclass="info-wrap"data-l1="9">'
     book_writer_works = '<spanclass="book"></span><p>作品总数</p><em>([\s\S]*?)</em></li><li><spanclass="word">'
@@ -53,10 +54,17 @@ class QidianSpider(scrapy.Spider):
             yield scrapy.Request(url=response.url, callback=self.parse, dont_filter=True, meta={'dont_retry':True})
 
     def parse_novel_info(self, response):
+
+        # 封面获取检测
+        if response.xpath(self.book_img_X).extract():
+            imgUrl = 'https:%s'%response.xpath(self.book_img_X).extract()[0].strip()
+        else:
+            imgUrl = 'https://bookcover.yuewen.com/qdbimg/%s/%s/180'%(self.reglux(response.text, self.book_img, False)[0][0],response.url[29:])
+
         BI_resdict = {
             '书md5':self.code_md5(response.url),
             '书id':response.url[29:],
-            '书封面':self.imgToBase64('https:%s'%response.xpath(self.book_img_X).extract()[0].strip()),
+            '书封面':self.imgToBase64(imgUrl),
             '书封面URL':'https:%s'%response.xpath(self.book_img_X).extract()[0].strip(),
             '书名':self.reglux(response.text, self.book_name_writer, False)[0][0],
             '评分':self.scoreGet(response.url[29:]),
@@ -96,10 +104,10 @@ class QidianSpider(scrapy.Spider):
         tempdict = response.meta['item']
         # 获取速度过快，导致失败
         if 'data' not in datas:
-            print('%s 获取失败，尝试使用requests获取！')
+            print('%s 获取失败，尝试使用requests获取！'%response.url)
             datas = self.indexAjaxGet(response.url.split('bookId=')[-1])
             if 'data' not in datas:
-                print('%s 尝试使用requests获取，更新csrf并返回任务队列'%(response.url))
+                print('%s 尝试使用requests获取，更新csrf并返回任务队列'%response.url)
                 # 更新csrf
                 n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = response.url.split('bookId=')[-1])
                 yield scrapy.Request(url=n_url, callback=self.ajax_index, meta={"item": tempdict,'dont_retry':True,}, dont_filter=True)
@@ -165,8 +173,6 @@ class QidianSpider(scrapy.Spider):
         else:
             names = response.xpath("/html/body/div[@class='result-list']/div[@class='result-item result-game-item']/div[@class='result-game-item-detail']/h3[@class='result-item-title result-game-item-title']/a[@class='result-game-item-title-link']/span/text()").extract()
             urls = response.xpath("/html/body/div[@class='result-list']/div[@class='result-item result-game-item']/div[@class='result-game-item-detail']/h3[@class='result-item-title result-game-item-title']/a[@class='result-game-item-title-link']/@href").extract()
-            response.meta['item']['笔趣阁URL'] = urls[names.index(response.meta['item']['书名'])]
-            response.meta['item']['章节爬取状态'] = 1,
             meta = {
                 "item": response.meta['item'],
                 'requests': response.meta['requests'],
@@ -175,6 +181,12 @@ class QidianSpider(scrapy.Spider):
                 'url_home': r'https://www.biquge.com.cn',   # 用于拼接小说正文的URL，某些网站用的不完整url，例如：/book/29931/15997848.html，需要拼接https://www.zwdu.com 组成：https://www.zwdu.com/book/29931/15997848.html
                 'updateBool':self.custom_settings['updateBool'],# 是否只爬取最新的章节
             }
+            if response.meta['item']['书名'] not in names:
+                tempId = response.xpath("//body//div//div/p[@class='result-game-item-info-tag'][4]/a/@href").extract()[0].split('/')[-2]
+                response.meta['item']['笔趣阁URL'] = '%s/book/%s/'%(meta['url_home'],tempId)
+            else:
+                response.meta['item']['笔趣阁URL'] = urls[names.index(response.meta['item']['书名'])]
+            response.meta['item']['章节爬取状态'] = 1,
             yield scrapy.Request(url=urls[names.index(response.meta['item']['书名'])], callback=self.content_handler, meta=meta)
 
     def content_handler(self,response):

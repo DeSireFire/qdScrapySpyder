@@ -30,6 +30,7 @@ class QidianPipeline(object):
         self.cursor = self.db.cursor()
 
     def close_spider(self,spider):
+        self.cursor.close()
         self.db.close()
 
     def process_item(self,item,spider):
