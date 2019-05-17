@@ -47,7 +47,9 @@ class QidianSpider(scrapy.Spider):
             print('%s 页面作品列表获取成功！'%response.url)
             for i in urls:
                 if response.headers.getlist("Set-Cookie"):
-                    self.set_cookie = str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]
+                    if 'newstatisticUUID' not in str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]:
+                        self.set_cookie = str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]
+                    print(self.set_cookie)
                 yield scrapy.Request(url='https:%s'%i, callback=self.parse_novel_info)
         else:
             print('%s 请求速度过快，未获取到数据，重试！'%response.url)
@@ -374,6 +376,9 @@ class QidianSpider(scrapy.Spider):
         }
         n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(
             csrfToken=self.csrfGet()[0], bookeId=tempStr)
+        if 'newstatisticUUID' in n_url:
+            n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(
+                csrfToken=self.set_cookie, bookeId=tempStr)
         req = requests.get(url=n_url, headers=myheader, proxies=self.proxy_list())
         req.encoding = chardet.detect(req.content)['encoding']
         if req.encoding == "GB2312":
@@ -502,8 +507,9 @@ if __name__ == '__main__':
     # print(QidianSpider.imgToBase64('https://bookcover.yuewen.com/qdbimg/349573/2571593/180'))
     # print(os.path.join(os.path.abspath(os.path.dirname(__file__)),'breakPoint.txt'))
     # print(QidianSpider.breakPoint({'page':15,'pages':[65,787],'bookName':[888,666]}))
-    # QidianSpider.csrfGet()
     # print('content_%s'%QidianSpider.code_md5('https://blog.csdn.net/seven_3306/article/details/30254299')[0])
-    print(QidianSpider.indexAjaxGet('1004608738'))
+    # print(QidianSpider.indexAjaxGet('1004608738'))
     # print(QidianSpider.scoreGet('1004608738'))
     # QidianSpider.bookListGet('https://www.qidian.com/all')
+    while 1:
+        print(QidianSpider.csrfGet())
