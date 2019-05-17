@@ -65,7 +65,7 @@ class QidianSpider(scrapy.Spider):
             '书md5':self.code_md5(response.url),
             '书id':response.url[29:],
             '书封面':self.imgToBase64(imgUrl),
-            '书封面URL':'https:%s'%response.xpath(self.book_img_X).extract()[0].strip(),
+            '书封面URL':imgUrl,
             '书名':self.reglux(response.text, self.book_name_writer, False)[0][0],
             '评分':self.scoreGet(response.url[29:]),
             '总字数':0,
