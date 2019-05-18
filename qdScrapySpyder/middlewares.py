@@ -137,7 +137,6 @@ class ProxyMiddleware():
             proxy = self.get_random_proxy()
             if proxy:
                 url = 'https://{proxy}'.format(proxy=proxy)
-                print(url)
                 self.logger.debug('使用代理 %s' % proxy)
                 request.meta['proxy'] = url
 

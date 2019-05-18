@@ -109,7 +109,7 @@ class QidianSpider(scrapy.Spider):
             print('%s 获取失败，尝试使用requests获取！'%response.url)
             datas = self.indexAjaxGet(response.url.split('bookId=')[-1])
             if 'data' not in datas:
-                print('%s 尝试使用requests获取，更新csrf并返回任务队列'%response.url)
+                print('%s 尝试使用requests获取，更新csrf并返回任务队列（必须确保代理池工作正常）'%response.url)
                 # 更新csrf
                 n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(csrfToken = self.set_cookie,bookeId = response.url.split('bookId=')[-1])
                 yield scrapy.Request(url=n_url, callback=self.ajax_index, meta={"item": tempdict,'dont_retry':True,}, dont_filter=True)
