@@ -379,7 +379,7 @@ class QidianSpider(scrapy.Spider):
         if 'newstatisticUUID' in n_url:
             n_url = 'https://book.qidian.com/ajax/book/category?{csrfToken}&bookId={bookeId}'.format(
                 csrfToken=self.set_cookie, bookeId=tempStr)
-        req = requests.get(url=n_url, headers=myheader, proxies=self.proxy_list())
+        req = requests.get(url=n_url, headers=myheader, proxies=self.proxy_list(), verify=True)
         req.encoding = chardet.detect(req.content)['encoding']
         if req.encoding == "GB2312":
             req.encoding = "GBK"
@@ -399,7 +399,7 @@ class QidianSpider(scrapy.Spider):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
         }
         scoreUrl = "https://book.qidian.com/ajax/comment/index?{_csrfToken}&bookId={bookId}&pageSize=15".format(_csrfToken=self.csrfGet()[0],bookId=tempStr)
-        req = requests.get(url=scoreUrl, headers=myheader, proxies=self.proxy_list())
+        req = requests.get(url=scoreUrl, headers=myheader, proxies=self.proxy_list(), verify=True)
         datas = req.json()
         if 'data' in datas.keys():
             return datas['data']['rate']
@@ -417,7 +417,7 @@ class QidianSpider(scrapy.Spider):
             'Host':'www.qidian.com',
             'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'
         }
-        req = requests.get(url='https://www.qidian.com/all',headers=headers, proxies=self.proxy_list())
+        req = requests.get(url='https://www.qidian.com/all',headers=headers, proxies=self.proxy_list(), verify=True)
         return req.headers['set-cookie'].split(';')
 
     @classmethod
@@ -433,7 +433,7 @@ class QidianSpider(scrapy.Spider):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
         }
         # print("封面地址：https://bookcover.yuewen.com/qdbimg/349573/%s/180"%imgId)
-        req = requests.get(url=imgId, headers=myheader)
+        req = requests.get(url=imgId, headers=myheader, verify=True)
         base64_data = base64.b64encode(req.content)
         return 'data:image/jpg;base64,' + bytes.decode(base64_data)
 
