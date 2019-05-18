@@ -49,7 +49,7 @@ class QidianSpider(scrapy.Spider):
                 if response.headers.getlist("Set-Cookie"):
                     if 'newstatisticUUID' not in str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]:
                         self.set_cookie = str(response.headers.getlist("Set-Cookie")[0], encoding="utf-8").split(';')[0]
-                    print(self.set_cookie)
+                    # print(self.set_cookie)
                 yield scrapy.Request(url='https:%s'%i, callback=self.parse_novel_info)
         else:
             print('%s 请求速度过快，未获取到数据，重试！'%response.url)
@@ -189,7 +189,7 @@ class QidianSpider(scrapy.Spider):
             else:
                 response.meta['item']['笔趣阁URL'] = urls[names.index(response.meta['item']['书名'])]
             response.meta['item']['章节爬取状态'] = 1,
-            yield scrapy.Request(url=urls[names.index(response.meta['item']['书名'])], callback=self.content_handler, meta=meta)
+            yield scrapy.Request(url=response.meta['item']['笔趣阁URL'], callback=self.content_handler, meta=meta)
 
     def content_handler(self,response):
         '''
@@ -392,7 +392,7 @@ class QidianSpider(scrapy.Spider):
         :param tempStr: 字符串，小说的起点ID
         :return: base64码
         '''
-        import requests
+        import requests,random
         myheader = {
             'Referer': 'https://book.qidian.com/info/%s'%tempStr,
             'Host': 'book.qidian.com',
@@ -400,7 +400,11 @@ class QidianSpider(scrapy.Spider):
         }
         scoreUrl = "https://book.qidian.com/ajax/comment/index?{_csrfToken}&bookId={bookId}&pageSize=15".format(_csrfToken=self.csrfGet()[0],bookId=tempStr)
         req = requests.get(url=scoreUrl, headers=myheader, proxies=self.proxy_list())
-        return req.json()['data']['rate']
+        datas = req.json()
+        if 'data' in datas.keys():
+            return datas['data']['rate']
+        else:
+            return '%s.0'%random.randint(0,5)
 
     @classmethod
     def csrfGet(self):
