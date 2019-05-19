@@ -383,6 +383,8 @@ class QidianSpider(scrapy.Spider):
         req.encoding = chardet.detect(req.content)['encoding']
         if req.encoding == "GB2312":
             req.encoding = "GBK"
+        if 'data' in req.json().keys():
+            print('id: %s 通过 requests 获取成功！')
         return req.json()
 
     @classmethod
