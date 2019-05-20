@@ -384,7 +384,7 @@ class QidianSpider(scrapy.Spider):
         if req.encoding == "GB2312":
             req.encoding = "GBK"
         if 'data' in req.json().keys():
-            print('id: %s 通过 requests 获取成功！')
+            print('id: %s 通过 requests 获取成功！'%tempStr)
         return req.json()
 
     @classmethod
